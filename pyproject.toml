@@ -1,0 +1,41 @@
+[project]
+name = "unifi-ml2-driver"
+version = "0.1.0"
+description = "Unifi Modular Layer 2 (ML2) driver."
+authors = [
+    {name = "appkins", email = "info@appkins.io"}
+]
+license-files = ["LICENSE"]
+readme = "README.rst"
+requires-python = ">=3.12.0"
+dependencies = [
+    "aiounifi (>=83)",
+    "etcd3gw (>=2.1.0)",
+    "eventlet (>=0.18.2)",
+    "stevedore (>=1.20.0)",
+    "netmiko (>=4.1.1)",
+    "neutron (>=13.0.0.0b1)",
+    "neutron-lib (>=1.18.0)",
+    "oslo-config (>=5.2.0)",
+    "oslo-i18n (>=3.15.3)",
+    "oslo-log (>=3.36.0)",
+    "oslo-utils (>=3.40.2)",
+    "tenacity (>=6.0.0)",
+    "tooz (>=2.5.1)"
+]
+
+[tool.poetry]
+packages = [{include = "unifi_ml2_driver", from = "."}]
+scripts = {unifi-ml2-driver = "unifi_ml2_driver.cli:main"}
+dependencies = {python = ">=3.12.0,<4.0"}
+
+[tool.poetry.group.dev.dependencies]
+coverage = ">=4.0"
+fixtures = ">=3.0.0"
+futurist = ">=1.2.0"
+reorder-python-imports = ">=3.12.0"
+stestr = ">=2.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

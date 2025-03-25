@@ -1,0 +1,70 @@
+- job:
+    name: networking-generic-switch-tempest-dlm
+    parent: devstack-tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^networking_generic_switch/tests/.*$
+      - ^releasenotes/.*$
+      - ^setup.cfg$
+      - ^test-requirements.txt$
+      - ^tools/.*$
+      - ^tox.ini$
+    timeout: 4800
+    required-projects:
+      - openstack/networking-generic-switch
+    vars:
+      tox_envlist: py3
+      tempest_test_regex: ngs
+      devstack_plugins:
+        networking-generic-switch: https://opendev.org/openstack/networking-generic-switch
+      devstack_localrc:
+        ENABLE_TENANT_VLANS: True
+        GENERIC_SWITCH_USER_MAX_SESSIONS: 2
+        OVS_PHYSICAL_BRIDGE: brbm
+        PHYSICAL_NETWORK: mynetwork
+        Q_AGENT: openvswitch
+        Q_ML2_PLUGIN_MECHANISM_DRIVERS: openvswitch
+        Q_ML2_TENANT_NETWORK_TYPE: vlan
+        TENANT_VLAN_RANGE: 100:150
+      devstack_services:
+        c-api: False
+        c-bak: False
+        c-sch: False
+        c-vol: False
+        cinder: False
+        etcd3: True
+        g-api: False
+        generic_switch: True
+        glace: False
+        key: True
+        mysql: True
+        n-api-meta: False
+        n-api: False
+        n-cond: False
+        n-cpu: False
+        n-novnc: False
+        n-sch: False
+        nova: False
+        ovn-controller: False
+        ovn-northd: False
+        placement-api: False
+        q-agt: True
+        q-dhcp: True
+        q-l3: True
+        q-ovn-metadata-agent: False
+        q-svc: True
+        rabbit: True
+        s-account: False
+        s-container: False
+        s-object: False
+        s-proxy: False
+        swift: False
+        tempest: True
+
+- job:
+    name: networking-generic-switch-tox-codespell
+    parent: openstack-tox
+    timeout: 7200
+    vars:
+      tox_envlist: codespell
