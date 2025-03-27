@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Networking Generic Switch Release Notes documentation build configuration
+# UniFi ML2 Driver Release Notes documentation build configuration
 # file, created by sphinx-quickstart on Tue Nov  3 17:40:50 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -55,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Networking Generic Switch Release Notes'
-copyright = '2018, The Networkig Generic Switch team'
+project = 'UniFi ML2 Driver Release Notes'
+copyright = '2025, UniFi ML2 Driver Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -114,9 +114,9 @@ pygments_style = 'native'
 html_theme = 'openstackdocs'
 
 # openstackdocstheme options
-openstackdocs_repo_name = 'openstack/networking-generic-switch'
+openstackdocs_repo_name = 'ubiquity-community/unifi-ml2-driver'
 openstackdocs_auto_name = False
-openstackdocs_bug_project = 'networking-generic-switch'
+openstackdocs_bug_project = 'unifi-ml2-driver'
 openstackdocs_bug_tag = ''
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -195,8 +195,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'NetworkingUnifiReleaseNotesdoc'
-
+htmlhelp_basename = 'UniFiML2DriverReleaseNotesdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -215,9 +214,9 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'NetworkingUnifiReleaseNotes.tex',
-     'Networking Generic Switch Release Notes Documentation',
-     'Networking Generic Switch Developers', 'manual'),
+    ('index', 'UniFiML2DriverReleaseNotes.tex',
+     'UniFi ML2 Driver Release Notes Documentation',
+     'UniFi ML2 Driver Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -246,9 +245,9 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'networkingunifireleasenotes',
-     'Networking Generic Switch Release Notes Documentation',
-     ['Networking Generic Switch Developers'], 1)
+    ('index', 'unifiml2driverreleasenotes',
+     'UniFi ML2 Driver Release Notes Documentation',
+     ['UniFi ML2 Driver Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -261,11 +260,11 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'NetworkingUnifiReleaseNotes',
-     'Networking Generic Switch Release Notes Documentation',
-     'networking Generic Switch Developers',
-     'networkingunifireleasenotes',
-     'Neutron plugin that provides deep Ironic/Neutron integration.',
+    ('index', 'UniFiML2DriverReleaseNotes',
+     'UniFi ML2 Driver Release Notes Documentation',
+     'UniFi ML2 Driver Team',
+     'unifiml2driverreleasenotes',
+     'Neutron ML2 driver for UniFi switches that provides integration between OpenStack Neutron and UniFi Network Controllers.',
      'Miscellaneous'),
 ]
 

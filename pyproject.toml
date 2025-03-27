@@ -30,12 +30,114 @@ scripts = {unifi-ml2-driver = "unifi_ml2_driver.cli:main"}
 dependencies = {python = ">=3.12.0,<4.0"}
 
 [tool.poetry.group.dev.dependencies]
-coverage = ">=4.0"
+# Test tools
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
+pytest-xdist = "^3.3.1"
+pytest-mock = "^3.11.1"
+coverage = "^7.3.0"
 fixtures = ">=3.0.0"
 futurist = ">=1.2.0"
-reorder-python-imports = ">=3.12.0"
 stestr = ">=2.0.0"
+
+# Linting tools
+flake8 = "^6.0.0"
+flake8-docstrings = "^1.7.0"
+flake8-import-order = "^0.18.2"
+flake8-quotes = "^3.3.2"
+flake8-bugbear = "^23.9.16"
+mypy = "^1.5.1"
+black = "^23.9.1"
+isort = "^5.12.0"
+pre-commit = "^3.5.0"
+reorder-python-imports = ">=3.12.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_glob = ["*/.eggs/*", "*/.tox/*"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+module = [
+    "netmiko.*",
+    "neutron.*",
+    "neutron_lib.*",
+    "oslo_config.*",
+    "oslo_i18n.*",
+    "oslo_log.*",
+    "oslo_utils.*",
+    "tenacity.*",
+    "tooz.*",
+    "stevedore.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["unifi_ml2_driver/tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--cov=unifi_ml2_driver --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
+
+[tool.coverage.run]
+source = ["unifi_ml2_driver"]
+omit = [
+    "unifi_ml2_driver/tests/*",
+    "unifi_ml2_driver/_i18n.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError"
+]

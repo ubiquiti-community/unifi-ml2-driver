@@ -1,29 +1,42 @@
-============================================
-Networking-generic-switch Neutron ML2 driver
-============================================
+=============================
+UniFi ML2 Driver for Neutron
+=============================
 
 .. image:: https://governance.openstack.org/tc/badges/networking-generic-switch.svg
     :target: https://governance.openstack.org/tc/reference/tags/index.html
 
 This is a Modular Layer 2 `Neutron Mechanism driver
-<https://wiki.openstack.org/wiki/Neutron/ML2>`_. The mechanism driver is
-responsible for applying configuration information to hardware equipment.
-``Unifi`` provides a pluggable framework to implement
-functionality required for use-cases like OpenStack Ironic multi-tenancy mode.
-It abstracts applying changes to all switches managed by this ML2 plugin
-and handling ``local_link_information`` field of Neutron port.
+<https://wiki.openstack.org/wiki/Neutron/ML2>`_ specifically designed for Ubiquiti UniFi switches. The mechanism driver is
+responsible for applying configuration information to UniFi hardware equipment.
 
-Networking-generic-switch is distributed under the terms of the Apache License,
+The ``unifi-ml2-driver`` provides integration between OpenStack Neutron and Ubiquiti UniFi Network controllers to manage switch ports, VLANs, and other features on UniFi switches. It's designed to support use-cases like OpenStack Ironic multi-tenancy mode and abstracts applying changes to all UniFi switches managed by the UniFi controller.
+
+UniFi ML2 Driver is distributed under the terms of the Apache License,
 Version 2.0. The full terms and conditions of this license are detailed in the
 LICENSE file.
 
 Project resources
 ~~~~~~~~~~~~~~~~~
 
-* Documentation: https://docs.openstack.org/networking-generic-switch/latest/
-* Source: https://opendev.org/openstack/networking-generic-switch
-* Bugs: https://bugs.launchpad.net/networking-generic-switch
-* Release notes: https://docs.openstack.org/releasenotes/networking-generic-switch/
+* Source: https://github.com/ubiquity-community/unifi-ml2-driver
+* Python Package: https://pypi.org/project/unifi-ml2-driver/
 
-For information on how to contribute to Networking-generic-switch, see
-https://docs.openstack.org/networking-generic-switch/latest/contributing.html.
+Features
+~~~~~~~~
+
+* VLAN Networks: Creating and managing VLAN networks on UniFi switches
+* Port Binding: Binding ports to specific switch ports
+* Trunk Ports: Managing trunk ports with native and tagged VLANs
+* Port Security: Configuring port security features (BPDU guard, loop guard)
+* QoS: Bandwidth limiting on a per-port basis
+* Storm Control: Limiting broadcast, multicast, and unknown unicast traffic
+* Port Monitoring: Monitoring port state and updating OpenStack port status
+
+Requirements
+~~~~~~~~~~~
+
+* Python 3.12+
+* OpenStack Neutron 13.0.0+
+* aiounifi 83+
+* UniFi Network Controller
+* UniFi switches

@@ -1,13 +1,11 @@
-Welcome to networking-generic-switch's documentation!
+Welcome to UniFi ML2 Driver's documentation!
 =====================================================
 
 .. toctree::
    :maxdepth: 2
 
-   supported-devices
    installation
    configuration
-   dev/dev-quickstart
    contributing
    contributor/api/modules
 

@@ -26,7 +26,7 @@ extensions = [
 ]
 
 # openstackdocstheme options
-openstackdocs_repo_name = 'openstack/networking-generic-switch'
+openstackdocs_repo_name = 'ubiquity-community/unifi-ml2-driver'
 openstackdocs_pdf_link = True
 openstackdocs_use_storyboard = False
 
@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-copyright = '2017, Openstack Foundation'
+copyright = '2025, Ubiquity Community'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -59,10 +59,11 @@ pygments_style = 'native'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
 # html_static_path = ['static']
+
 html_theme = 'openstackdocs'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'networking-generic-switchdoc'
+htmlhelp_basename = 'unifi-ml2-driverdoc'
 
 latex_use_xindy = False
 
@@ -71,9 +72,9 @@ latex_use_xindy = False
 # [howto/manual]).
 latex_documents = [
     ('index',
-     'doc-networking-generic-switch.tex',
-     'Networking Generic Switch Documentation',
-     'OpenStack Foundation', 'manual'),
+     'doc-unifi-ml2-driver.tex',
+     'UniFi ML2 Driver Documentation',
+     'Ubiquity Community', 'manual'),
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.

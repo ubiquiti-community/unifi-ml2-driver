@@ -2,79 +2,52 @@
 Supported Devices
 =================
 
-The following devices are supported by this plugin:
+The UniFi ML2 Driver supports Ubiquiti UniFi switches managed through a UniFi Network controller.
 
-* Arista EOS
-* ArubaOS-CX switches
-* Brocade ICX (FastIron)
-* Cisco 300-series switches
-* Cisco IOS switches
-* Cisco NX-OS switches (Nexus)
-* Cumulus Linux (via NCLU)
-* Cumulus Linux (via NVUE)
-* Dell Force10 (netmiko_dell_force10)
-* Dell OS10 (netmiko_dell_os10)
-* Dell PowerConnect
-* HPE 5900 Series switches
-* Huawei switches
-* Juniper Junos OS switches
-* OpenVSwitch
-* Ruijie switches
-* SONiC switches
-* Supermicro switches
+Supported UniFi Switch Models
+----------------------------
 
-This Mechanism Driver architecture allows easily to add more devices
-of any type.
+The driver has been tested with the following UniFi switch models:
+
+* UniFi Switch (USW) series
+* UniFi Switch Enterprise (USW-Enterprise) series
+* UniFi Switch Flex (USW-Flex) series
+* UniFi Switch Aggregation (USW-Aggregation)
+* UniFi Switch Pro (USW-Pro) series
+* UniFi Industrial Switch (USW-Industrial)
+
+Requirements
+-----------
+
+* UniFi Network Controller v6.0 or newer
+* UniFi switches with firmware supporting VLANs
+
+Architecture
+-----------
+
+The UniFi ML2 Driver communicates with the UniFi Network Controller API to manage switch configurations:
 
 ::
 
-  OpenStack Neutron v2.0 => ML2 plugin => Generic Mechanism Driver => Device plugin
+  OpenStack Neutron v2.0 => ML2 plugin => UniFi ML2 Driver => UniFi Network Controller API => UniFi Switches
 
-These device plugins use `Netmiko <https://github.com/ktbyers/netmiko>`_
-library, which in turn uses `Paramiko` library to access and configure
-the switches via the SSH protocol.
+The driver uses the `aiounifi <https://github.com/aiounifi/aiounifi>`_ library to interface with the UniFi Network Controller API.
 
-Dell Force10 OS9 (netmiko_dell_force10)
----------------------------------------
+Feature Support
+-------------
 
-Known working firmware versions: 9.13.0.0
+The driver supports the following features on UniFi switches:
 
-Notes:
+1. **VLAN Management**: Creating and deleting VLANs across switches
+2. **Port Configuration**: Setting port VLANs (access and trunk modes)
+3. **Port Security**: Enabling BPDU guard, loop guard, and storm control
+4. **QoS**: Configuring bandwidth limits on ports
+5. **Port Status Monitoring**: Tracking switch port status and updating Neutron
 
- * Dell Force10 Simulator for 9.13.0 lacks the ability to set a switchport
-   mode to trunk, which prevents automated or even semi-automated testing.
-   That being said, creating VLANs and tagging/untagging works as expected.
- * Uplink switchports to the rest of the network fabric must be configured in
-   advance if the ``ngs_trunk_ports`` switch device level configuration
-   option is *not* utilized.
- * Use of SSH is expected and must be configured on the remote switch.
- * Set each port to "switchport" to enable L2 switchport mode.
- * Use of an "enable" secret through the switch level configuration option
-   ``secret`` was the tested path. Depending on precise switch configuration
-   and access control modeling, it may be possible to use without an enable
-   secret, but that has not been tested.
+Limitations
+----------
 
-Known Issues:
-
- * `bug 2100641 <https://bugs.launchpad.net/ironic/+bug/2100641>`_ is
-   alieviated by setting a port to "switchport" *before* attempting to utilize
-   networking-generic-switch.
-
-Dell Force10 OS10 (netmiko_dell_os10)
--------------------------------------
-
-Known working firmware version: 10.6.0.2.74
-
-Notes:
-
- * Uplink switchports may need to be configured as Trunk ports prior to the
-   use of networking-generic-switch through a "switchport mode trunk" command.
-   Further specific trunk configuration may be necessary, however NGS can
-   leverage the ``ngs_trunk_ports`` configuration option and does appropriately
-   tag switchports as permitted when creating/deleting attachments.
- * Password authentication for networking-generic-switch needs to be setup in
-   advance, specifically "ip ssh server enable" and
-   "ip ssh server password-authentication" commands.
- * This driver was tested *without* the use of an enable secret to
-   permit a higher level of configuration access within the Switch.
+1. The UniFi Network Controller must be reachable from the Neutron servers.
+2. Only VLANs defined within the ranges configured in Neutron can be managed.
+3. Port security features depend on the capabilities of the specific UniFi switch model.
 

@@ -1,13 +1,10 @@
-#########################################
-Contributing to Networking-generic-switch
-#########################################
+#################################
+Contributing to UniFi ML2 Driver
+#################################
 
-If you would like to contribute to the development of Unifi project, you must follow the
-general OpenStack community procedures documented at:
+If you would like to contribute to the development of UniFi ML2 Driver project, you can submit pull requests through GitHub:
 
-   https://docs.openstack.org/infra/manual/developers.html#development-workflow
-
-Pull requests submitted through GitHub will be ignored.
+   https://github.com/ubiquity-community/unifi-ml2-driver
 
 Contributor License Agreement
 =============================
@@ -15,64 +12,89 @@ Contributor License Agreement
 .. index::
    single: license; agreement
 
-In order to contribute to the Unifi project, you need to have
-signed OpenStack's contributor's agreement.
-
-.. seealso::
-
-   * https://docs.openstack.org/infra/manual/developers.html
-   * https://wiki.openstack.org/CLA
+In order to contribute to the UniFi ML2 Driver project, you must agree to the terms of the Apache License 2.0.
 
 Related Projects
 ================
 
    * https://docs.openstack.org/neutron/latest
    * https://docs.openstack.org/ironic/latest
-
+   * https://github.com/aiounifi/aiounifi
 
 Project Hosting Details
 =======================
 
 Bug tracker
-    https://bugs.launchpad.net/networking-generic-switch
+    https://github.com/ubiquity-community/unifi-ml2-driver/issues
 
 Code Hosting
-    https://opendev.org/openstack/networking-generic-switch
+    https://github.com/ubiquity-community/unifi-ml2-driver
 
-Code Review
-    https://review.opendev.org/#/q/status:open+project:openstack/networking-generic-switch,n,z
+Getting Started as a Contributor
+===============================
 
+1. Fork the repository on GitHub
+2. Clone your fork locally
+3. Set up a virtual environment using Poetry:
 
-Creating new device plugins
-===========================
+   .. code-block:: console
 
-#. Subclass the abstract class
-   ``unifi_ml2_driver.devices.Unifi``
-   and implement all the abstract methods it defines.
+      $ poetry install
 
-   * Your class must accept as first argument a dictionary that contains
-     all fields given in the device config section of the ML2 plugin config.
-     This will be available as ``self.config`` in the instantiated object.
-     The second argument is the device name as specified in the configuration.
-     It is recommended to accept and pass ``*args`` and ``**kwargs`` to the
-     __init__ method of the parent class: this helps to stay compatible with
-     future changes of the base class.
+4. Run tests to make sure everything is working:
 
-#. Register your class under ``unifi.devices`` entrypoint.
-#. Add your device config to the plugin configuration file
-   (``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini`` by default).
-   The only required option is ``device_type`` that must be equal to the
-   entrypoint you have registered your plugin under, as it is used for plugin
-   lookup (see provided ``Netmiko``-based plugins for example).
+   .. code-block:: console
 
+      $ poetry run pytest
 
-Additional Contributor Resources
-================================
-Unifi is a member of the Bare Metal (ironic) program in OpenStack.
-Development of Unifi follows many ironic conventions.
+5. Create a branch for your changes:
 
-The `Ironic developer quickstart <https://docs.openstack.org/ironic/latest/contributor/dev-quickstart.html>_`
-has some relevant information -- particularly on unit testing with tox,
-integration testing with devstack, and other information that may be useful
-for Unifi developers. As the documentation is written targeting
-Ironic, it should only be used as a general guideline.
+   .. code-block:: console
+
+      $ git checkout -b feature/your-feature-name
+
+6. Make your changes and commit them with descriptive commit messages
+7. Push your changes to your fork
+8. Submit a pull request
+
+Development Environment
+=====================
+
+The UniFi ML2 Driver project uses Poetry for dependency management and packaging.
+
+* To install development dependencies:
+
+  .. code-block:: console
+
+     $ poetry install
+
+* To run tests:
+
+  .. code-block:: console
+
+     $ poetry run pytest
+
+* To run linting:
+
+  .. code-block:: console
+
+     $ poetry run flake8 unifi_ml2_driver
+     $ poetry run mypy unifi_ml2_driver
+
+* To format code:
+
+  .. code-block:: console
+
+     $ poetry run black unifi_ml2_driver
+     $ poetry run isort unifi_ml2_driver
+
+Documentation
+============
+
+Documentation is built using Sphinx. To build the documentation:
+
+.. code-block:: console
+
+   $ cd doc
+   $ pip install -r requirements.txt
+   $ sphinx-build -b html source build/html

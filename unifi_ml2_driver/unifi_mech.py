@@ -40,6 +40,19 @@ CONF = cfg.CONF
 
 # Additional UniFi specific configuration options
 unifi_opts = [
+    cfg.StrOpt('controller',
+               help='URL of the UniFi Network controller'),
+    cfg.StrOpt('username',
+               help='Username for UniFi controller authentication'),
+    cfg.StrOpt('password',
+               secret=True,
+               help='Password for UniFi controller authentication'),
+    cfg.StrOpt('site',
+               default='default',
+               help='UniFi site name to manage'),
+    cfg.BoolOpt('verify_ssl',
+                default=True,
+                help='Verify SSL certificates for UniFi controller connection'),
     cfg.StrOpt('port_name_format',
                default='openstack-port-{port_id}',
                help='Format string for port names. Available variables: '
@@ -59,6 +72,37 @@ unifi_opts = [
     cfg.BoolOpt('sync_startup',
                 default=True,
                 help='Sync networks and ports on startup'),
+    cfg.BoolOpt('use_all_networks_for_trunk',
+                default=True,
+                help='Use "All Networks" option for trunk ports instead of '
+                     'explicitly listing tagged VLANs'),
+    cfg.BoolOpt('enable_port_security',
+                default=True,
+                help='Enable port security features like MAC address filtering'),
+    cfg.BoolOpt('enable_qos',
+                default=False,
+                help='Enable QoS features on ports'),
+    cfg.IntOpt('default_bandwidth_limit',
+                default=0,
+                help='Default bandwidth limit in Kbps (0 means unlimited)'),
+    cfg.BoolOpt('enable_storm_control',
+                default=False,
+                help='Enable storm control on ports'),
+    cfg.IntOpt('storm_control_broadcasting',
+                default=0,
+                help='Storm control threshold for broadcast traffic (0-100%)'),
+    cfg.IntOpt('storm_control_multicasting',
+                default=0,
+                help='Storm control threshold for multicast traffic (0-100%)'),
+    cfg.IntOpt('storm_control_unknown_unicast',
+                default=0,
+                help='Storm control threshold for unknown unicast traffic (0-100%)'),
+    cfg.BoolOpt('monitor_port_state',
+                default=True,
+                help='Monitor port state and update OpenStack port status'),
+    cfg.IntOpt('monitor_interval',
+                default=60,
+                help='Interval in seconds to monitor port state'),
 ]
 
 CONF.register_opts(unifi_opts, "unifi")
@@ -107,12 +151,20 @@ class UnifiMechDriver(api.MechanismDriver):
 
         # Test connection to controller
         try:
-            self._get_controller()
-            LOG.info("Successfully connected to UniFi controller at %s",
-                     CONF.unifi.controller)
-            
-            if CONF.unifi.sync_startup:
-                self._sync_networks()
+            with self._get_controller() as controller:
+                LOG.info("Successfully connected to UniFi controller at %s",
+                         CONF.unifi.controller)
+                
+                # Import threading here to avoid circular imports
+                import threading
+                
+                # Start port monitoring if enabled
+                if CONF.unifi.monitor_port_state:
+                    self.start_port_monitor()
+                
+                # Sync networks if needed
+                if CONF.unifi.sync_startup:
+                    self._sync_networks()
         except Exception as e:
             LOG.error("Failed to connect to UniFi controller: %s", e)
             # Don't raise - let the driver remain initialized but inactive
@@ -832,6 +884,30 @@ class UnifiMechDriver(api.MechanismDriver):
                     "port_vlan": vlan_id
                 }
                 
+                # Add QoS configuration if enabled
+                if CONF.unifi.enable_qos:
+                    port_conf["tx_rate_limit_enabled"] = True
+                    port_conf["tx_rate_limit_kbps_cfg"] = CONF.unifi.default_bandwidth_limit
+                    
+                # Add storm control if enabled
+                if CONF.unifi.enable_storm_control:
+                    if CONF.unifi.storm_control_broadcasting > 0:
+                        port_conf["stormctrl_bcast_enabled"] = True
+                        port_conf["stormctrl_bcast_rate"] = CONF.unifi.storm_control_broadcasting
+                    if CONF.unifi.storm_control_multicasting > 0:
+                        port_conf["stormctrl_mcast_enabled"] = True
+                        port_conf["stormctrl_mcast_rate"] = CONF.unifi.storm_control_multicasting
+                    if CONF.unifi.storm_control_unknown_unicast > 0:
+                        port_conf["stormctrl_ucast_enabled"] = True
+                        port_conf["stormctrl_ucast_rate"] = CONF.unifi.storm_control_unknown_unicast
+                
+                # Add port security if enabled
+                if CONF.unifi.enable_port_security:
+                    port_conf["dot1x_ctrl"] = "force_authorized"
+                    port_conf["stp_port_fast"] = True
+                    port_conf["stp_bpdu_guard"] = True
+                    port_conf["stp_loop_guard"] = True
+                
                 # Send configuration to controller
                 for attempt in range(CONF.unifi.port_setup_retry_count):
                     try:
@@ -992,3 +1068,400 @@ class UnifiMechDriver(api.MechanismDriver):
 
             switch.del_subports_on_trunk(
                 binding_profile, port_id, subports)
+
+    def _is_port_supported(self, port):
+        """Check if a port is supported by this driver.
+        
+        Args:
+            port: The neutron port object
+            
+        Returns:
+            True if the port is supported by this driver
+        """
+        # Check if the port has binding information
+        if not port.get('binding:profile'):
+            return False
+            
+        # Check if it has local link information
+        local_link_info = port['binding:profile'].get('local_link_information')
+        if not local_link_info or not isinstance(local_link_info, list):
+            return False
+            
+        # At least one switch must be supported
+        for link in local_link_info:
+            switch_id = link.get('switch_id')
+            if self._is_switch_supported(switch_id):
+                return True
+                
+        return False
+        
+    def _configure_trunk_port(self, switch_id, port_id, port_obj, subports=None):
+        """Configure a trunk port with tagged VLANs.
+        
+        Args:
+            switch_id: The MAC address of the switch
+            port_id: The port ID on the switch
+            port_obj: The neutron port object for the parent port
+            subports: List of subport objects or None
+            
+        Returns:
+            True if successful
+        """
+        LOG.debug("Configuring trunk port %s on switch %s with subports %s",
+                 port_id, switch_id, subports)
+        
+        # Get the native VLAN of the trunk port
+        network_id = port_obj.get('network_id')
+        core_plugin = directory.get_plugin()
+        context = n_context.get_admin_context()
+        network = core_plugin.get_network(context, network_id)
+        native_vlan = network.get('provider:segmentation_id', 1)
+        
+        # Get VLANs from subports
+        tagged_vlans = []
+        if subports:
+            for subport in subports:
+                segmentation_id = subport.get('segmentation_id')
+                if segmentation_id:
+                    tagged_vlans.append(segmentation_id)
+        
+        try:
+            with self._get_controller() as controller:
+                loop = asyncio.get_event_loop()
+                
+                # Find this switch
+                devices = loop.run_until_complete(controller.devices.update())
+                switch = next((d for d in devices if hasattr(d, 'mac') and d.mac == switch_id), None)
+                
+                if not switch:
+                    raise exceptions.CannotConnect(
+                        f"Switch {switch_id} not found in UniFi controller")
+                
+                # Get port_idx from port_id
+                try:
+                    port_idx = int(port_id)
+                except ValueError:
+                    # Try to find port by name
+                    port = next((p for p in switch.port_table 
+                               if hasattr(p, 'name') and p.name == port_id), None)
+                    if port:
+                        port_idx = port.port_idx
+                    else:
+                        raise exceptions.UnifiException(
+                            f"Port {port_id} not found on switch {switch_id}")
+                
+                # Set trunk port configuration
+                port_conf = {
+                    "mac": switch_id,
+                    "port_idx": port_idx,
+                    "name": CONF.unifi.port_name_format.format(
+                        port_id=port_obj['id'],
+                        network_id=network_id,
+                        segmentation_id=native_vlan
+                    ),
+                    # Set to trunk mode
+                    "port_vlan_enabled": True,    # Native VLAN
+                    "port_vlan": native_vlan      # Native VLAN ID
+                }
+                
+                # Add tagged VLANs
+                if tagged_vlans:
+                    # Check if we should use "All Networks" mode
+                    if CONF.unifi.use_all_networks_for_trunk:
+                        port_conf["vlan_mode"] = "all"  # All VLANs are allowed
+                    else:
+                        port_conf["vlan_mode"] = "tagged"
+                        port_conf["tagged_vlan"] = tagged_vlans
+                        
+                # Add QoS configuration if enabled
+                if CONF.unifi.enable_qos:
+                    port_conf["tx_rate_limit_enabled"] = True
+                    port_conf["tx_rate_limit_kbps_cfg"] = CONF.unifi.default_bandwidth_limit
+                
+                # Add port security if enabled (typically less strict for trunk ports)
+                if CONF.unifi.enable_port_security:
+                    port_conf["stp_port_fast"] = False  # Disable port fast on trunk ports
+                    port_conf["stp_bpdu_guard"] = False # Disable BPDU guard on trunk ports
+                
+                # Send configuration to controller
+                for attempt in range(CONF.unifi.port_setup_retry_count):
+                    try:
+                        loop.run_until_complete(
+                            controller.devices.async_set_port_conf(port_conf)
+                        )
+                        LOG.info("Configured trunk port %s on switch %s with native VLAN %s and tagged VLANs %s",
+                                port_id, switch_id, native_vlan, tagged_vlans)
+                        return True
+                    except Exception as e:
+                        if attempt < CONF.unifi.port_setup_retry_count - 1:
+                            LOG.warning("Failed to configure trunk port, retrying: %s", e)
+                            time.sleep(CONF.unifi.port_setup_retry_interval)
+                        else:
+                            raise
+                
+        except Exception as e:
+            LOG.error("Failed to configure trunk port %s on switch %s: %s",
+                     port_id, switch_id, e)
+            raise exceptions.UnifiNetmikoConfigError()
+            
+    def add_subports_on_trunk(self, binding_profile, port_id, subports):
+        """Add subports to a trunk port.
+        
+        Args:
+            binding_profile: Port binding profile
+            port_id: The port ID on the switch
+            subports: List of subport objects
+            
+        Returns:
+            None
+        """
+        LOG.debug("Adding subports %s to trunk port %s", subports, port_id)
+        
+        # Get the switch ID from binding profile
+        local_link_info = binding_profile.get('local_link_information', [])
+        for link in local_link_info:
+            switch_id = link.get('switch_id')
+            switch_port_id = link.get('port_id')
+            
+            if not switch_id or not switch_port_id:
+                continue
+                
+            try:
+                # Get the port object for the trunk parent port
+                context = n_context.get_admin_context()
+                core_plugin = directory.get_plugin()
+                
+                # Extract the parent port ID from the binding profile
+                parent_port_id = binding_profile.get('parent_port_id')
+                if not parent_port_id:
+                    LOG.warning("No parent_port_id in binding profile")
+                    continue
+                    
+                parent_port = core_plugin.get_port(context, parent_port_id)
+                
+                # Configure the trunk port with the new subports
+                self._configure_trunk_port(switch_id, switch_port_id, parent_port, subports)
+                
+            except Exception as e:
+                LOG.error("Failed to add subports to trunk port %s on switch %s: %s",
+                         switch_port_id, switch_id, e)
+                
+    def del_subports_on_trunk(self, binding_profile, port_id, subports):
+        """Remove subports from a trunk port.
+        
+        Args:
+            binding_profile: Port binding profile
+            port_id: The port ID on the switch
+            subports: List of subport objects to remove
+            
+        Returns:
+            None
+        """
+        LOG.debug("Removing subports %s from trunk port %s", subports, port_id)
+        
+        # Get the switch ID from binding profile
+        local_link_info = binding_profile.get('local_link_information', [])
+        for link in local_link_info:
+            switch_id = link.get('switch_id')
+            switch_port_id = link.get('port_id')
+            
+            if not switch_id or not switch_port_id:
+                continue
+                
+            try:
+                # Get the port object for the trunk parent port
+                context = n_context.get_admin_context()
+                core_plugin = directory.get_plugin()
+                
+                # Extract the parent port ID from the binding profile
+                parent_port_id = binding_profile.get('parent_port_id')
+                if not parent_port_id:
+                    LOG.warning("No parent_port_id in binding profile")
+                    continue
+                    
+                parent_port = core_plugin.get_port(context, parent_port_id)
+                
+                # Get all remaining subports for this trunk
+                all_subports = self._get_subports_for_trunk(context, parent_port_id)
+                
+                # Remove the subports we're deleting
+                subport_ids_to_remove = [s['port_id'] for s in subports]
+                remaining_subports = [s for s in all_subports if s['port_id'] not in subport_ids_to_remove]
+                
+                # Reconfigure the trunk port with remaining subports
+                self._configure_trunk_port(switch_id, switch_port_id, parent_port, remaining_subports)
+                
+            except Exception as e:
+                LOG.error("Failed to remove subports from trunk port %s on switch %s: %s",
+                         switch_port_id, switch_id, e)
+                
+    def _get_subports_for_trunk(self, context, parent_port_id):
+        """Get all subports for a trunk port.
+        
+        Args:
+            context: Neutron context
+            parent_port_id: Parent port ID
+            
+        Returns:
+            List of subport objects
+        """
+        # Access the trunk plugin
+        trunk_plugin = directory.get_plugin('trunk')
+        if not trunk_plugin:
+            LOG.warning("Trunk plugin not available")
+            return []
+            
+        # Get the trunk for this parent port
+        filters = {'port_id': [parent_port_id]}
+        trunks = trunk_plugin.get_trunks(context, filters=filters)
+        
+        if not trunks:
+            return []
+            
+        # Return the subports for this trunk
+        trunk = trunks[0]
+        return trunk.get('sub_ports', [])
+
+    def start_port_monitor(self):
+        """Start a periodic task to monitor port state on switches."""
+        if not CONF.unifi.monitor_port_state:
+            LOG.debug("Port monitoring is disabled")
+            return
+        
+        LOG.info("Starting port monitor thread with interval %d seconds",
+                CONF.unifi.monitor_interval)
+        
+        # Start monitor thread
+        self._monitor_thread = threading.Thread(
+            target=self._port_monitor_loop,
+            daemon=True
+        )
+        self._monitor_thread.start()
+    
+    def _port_monitor_loop(self):
+        """Monitor ports in a loop and update their status."""
+        while True:
+            try:
+                self._check_port_status()
+            except Exception as e:
+                LOG.error("Error in port monitor: %s", e)
+                
+            time.sleep(CONF.unifi.monitor_interval)
+                
+    def _check_port_status(self):
+        """Check the status of all ports and update them if needed."""
+        if not self.port_mappings:
+            return
+            
+        LOG.debug("Checking status of %d ports", len(self.port_mappings))
+        
+        try:
+            with self._get_controller() as controller:
+                loop = asyncio.get_event_loop()
+                
+                # Fetch devices and their port status
+                devices = loop.run_until_complete(controller.devices.update())
+                
+                # Dictionary to keep track of port status by switch + port_id
+                port_status = {}
+                
+                # Create a mapping of switch MAC to device object
+                switch_devices = {
+                    d.mac: d for d in devices 
+                    if hasattr(d, 'mac') and hasattr(d, 'type') and d.type == 'usw'
+                }
+                
+                # Check each port in our mappings
+                for port_id, mapping in self.port_mappings.items():
+                    switch_id = mapping['switch_id']
+                    port_id_on_switch = mapping['port_id']
+                    
+                    # Find this switch
+                    switch = switch_devices.get(switch_id)
+                    if not switch:
+                        LOG.warning("Switch %s not found in controller", switch_id)
+                        continue
+                        
+                    # Find this port on the switch
+                    try:
+                        port_idx = int(port_id_on_switch)
+                    except ValueError:
+                        # Try to find port by name
+                        port = next((p for p in switch.port_table 
+                                  if hasattr(p, 'name') and p.name == port_id_on_switch), None)
+                        if port:
+                            port_idx = port.port_idx
+                        else:
+                            LOG.warning("Port %s not found on switch %s",
+                                       port_id_on_switch, switch_id)
+                            continue
+                    
+                    # Find port status in port_table
+                    port = next((p for p in switch.port_table 
+                              if hasattr(p, 'port_idx') and p.port_idx == port_idx), None)
+                    
+                    if not port:
+                        LOG.warning("Port %s not found in port_table for switch %s", 
+                                   port_idx, switch_id)
+                        continue
+                        
+                    # Check port status
+                    is_up = False
+                    if hasattr(port, 'up'):
+                        is_up = port.up
+                    elif hasattr(port, 'port_up'):
+                        is_up = port.port_up
+                        
+                    # Map to Neutron port status
+                    status = n_const.PORT_STATUS_ACTIVE if is_up else n_const.PORT_STATUS_DOWN
+                    
+                    # Store port status
+                    port_status[port_id] = status
+                
+                # Update port status in Neutron if needed
+                self._update_port_status_in_neutron(port_status)
+                
+        except Exception as e:
+            LOG.error("Failed to check port status: %s", e)
+            
+    def _update_port_status_in_neutron(self, port_status):
+        """Update port status in Neutron database.
+        
+        Args:
+            port_status: Dictionary of port_id -> status
+        """
+        if not port_status:
+            return
+            
+        # Get the Neutron core plugin
+        try:
+            core_plugin = directory.get_plugin()
+            if not core_plugin:
+                LOG.error("Neutron core plugin not available")
+                return
+                
+            # Create an admin context
+            context = n_context.get_admin_context()
+            
+            # Update port status for each port
+            for port_id, status in port_status.items():
+                # Skip ports with unknown status
+                if status is None:
+                    continue
+                    
+                # Get current port status
+                try:
+                    port = core_plugin.get_port(context, port_id)
+                    current_status = port.get('status')
+                    
+                    # Only update if status has changed
+                    if current_status != status:
+                        LOG.info("Updating port %s status from %s to %s",
+                                port_id, current_status, status)
+                        core_plugin.update_port_status(context, port_id, status)
+                except Exception as e:
+                    LOG.error("Failed to update port %s status: %s",
+                             port_id, e)
+                    
+        except Exception as e:
+            LOG.error("Failed to update port status in Neutron: %s", e)

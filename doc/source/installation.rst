@@ -2,16 +2,76 @@
 Installation
 ============
 
-This sections describes how to install and configure networking-generic-switch
-plugin.
+This section describes how to install and configure the unifi-ml2-driver plugin.
 
-At the command line::
+Requirements
+-----------
 
-    $ pip install networking-generic-switch
+* Python 3.12 or higher
+* OpenStack Neutron 13.0.0 or higher
+* UniFi Network Controller
+* UniFi switches
 
-Or, if you have virtualenvwrapper installed::
+Installation Methods
+------------------
 
-    $ mkvirtualenv networking-generic-switch
-    $ pip install networking-generic-switch
+Via pip (recommended)
+~~~~~~~~~~~~~~~~~~~~
 
-.. include:: include/configure-neutron.rst
+.. code-block:: console
+
+   $ pip install unifi-ml2-driver
+
+Via Poetry
+~~~~~~~~~
+
+.. code-block:: console
+
+   $ cd unifi-ml2-driver
+   $ poetry install
+
+Via Source
+~~~~~~~~~
+
+.. code-block:: console
+
+   $ git clone https://github.com/ubiquity-community/unifi-ml2-driver.git
+   $ cd unifi-ml2-driver
+   $ pip install .
+
+Enabling the Driver in Neutron
+----------------------------
+
+To enable the UniFi mechanism driver in Neutron's ML2 plugin, edit the
+``/etc/neutron/plugins/ml2/ml2_conf.ini`` file on the Neutron server:
+
+.. code-block:: ini
+
+   [ml2]
+   tenant_network_types = vlan
+   type_drivers = local,flat,vlan,gre,vxlan
+   mechanism_drivers = openvswitch,unifi
+
+For a standard installation, you'll also need to configure the UniFi controller connection details
+in a separate configuration file. Create or edit ``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini``:
+
+.. code-block:: ini
+
+   [unifi]
+   controller = https://<controller-ip>
+   username = <admin-username>
+   password = <admin-password>
+   site = default
+   verify_ssl = True
+
+After making these changes, restart the Neutron server:
+
+.. code-block:: console
+
+   $ systemctl restart neutron-server
+
+or with DevStack:
+
+.. code-block:: console
+
+   $ systemctl restart devstack@q-svc

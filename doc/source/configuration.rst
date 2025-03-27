@@ -484,3 +484,164 @@ can be repeated several times with different algorithms. Here is an example conf
 As of Paramiko 2.9.1, the valid types are ``ciphers``, ``macs``, ``keys``, ``pubkeys``,
 ``kex``, ``gsskex``.  However, this might change depending on the version of Paramiko.
 Check Paramiko source code or documentation to determine the accepted algorithm types.
+
+UniFi Controller Integration
+=========================
+
+The UniFi ML2 Driver allows OpenStack Neutron to integrate with Ubiquiti UniFi Network controllers to manage switch ports, VLANs, and other features on UniFi switches. This section describes the configuration options specific to the UniFi ML2 driver.
+
+To enable the UniFi mechanism driver, add it to the ML2 configuration in ``/etc/neutron/plugins/ml2/ml2_conf.ini``::
+
+   [ml2]
+   tenant_network_types = vlan
+   type_drivers = local,flat,vlan,gre,vxlan
+   mechanism_drivers = openvswitch,unifi
+   ...
+
+UniFi Controller Configuration
+-----------------------------
+
+The UniFi ML2 driver connects to a UniFi Network controller to manage UniFi switches. The following configuration options should be added to ``/etc/neutron/plugins/ml2/ml2_conf.ini`` or a separate file like ``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini``::
+
+    [unifi]
+    controller = https://<controller-ip>
+    username = <admin-username>
+    password = <admin-password>
+    site = default
+    verify_ssl = True
+    
+    # Optional configuration for port naming
+    port_name_format = openstack-port-{port_id}
+    port_description_format = OpenStack port {port_id}
+    
+    # Connection retry settings
+    api_retry_count = 3
+    port_setup_retry_count = 3
+    port_setup_retry_interval = 1
+    
+    # Startup behavior
+    sync_startup = True
+    
+    # Advanced trunk port behavior
+    use_all_networks_for_trunk = True
+    
+    # Port security features
+    enable_port_security = True
+    
+    # QoS features
+    enable_qos = False
+    default_bandwidth_limit = 0
+    
+    # Storm control
+    enable_storm_control = False
+    storm_control_broadcasting = 0
+    storm_control_multicasting = 0
+    storm_control_unknown_unicast = 0
+    
+    # Port monitoring
+    monitor_port_state = True
+    monitor_interval = 60
+
+Required Parameters:
+
+* ``controller``: URL of the UniFi Network controller (e.g., https://unifi.example.com:8443)
+* ``username``: Username for UniFi controller authentication
+* ``password``: Password for UniFi controller authentication
+
+Optional Parameters:
+
+* ``site``: UniFi site name to manage (defaults to "default")
+* ``verify_ssl``: Whether to verify SSL certificates (default: True)
+* ``port_name_format``: Format string for port names on switches (default: openstack-port-{port_id})
+* ``port_description_format``: Format string for port descriptions (default: OpenStack port {port_id})
+* ``api_retry_count``: Number of times to retry API calls (default: 3)
+* ``port_setup_retry_count``: Number of times to retry port setup operations (default: 3)
+* ``port_setup_retry_interval``: Interval between port setup retries in seconds (default: 1)
+* ``sync_startup``: Whether to sync networks on startup (default: True)
+* ``use_all_networks_for_trunk``: Use "All Networks" option for trunk ports (default: True)
+
+ML2 Feature Support
+------------------
+
+The UniFi ML2 driver supports the following ML2 features:
+
+1. **VLAN Networks**: Creating and managing VLAN networks on UniFi switches
+2. **Port Binding**: Binding ports to specific switch ports
+3. **Trunk Ports**: Managing trunk ports with native and tagged VLANs
+4. **Port Security**: Configuring port security features like MAC address filtering, BPDU guard, and loop guard
+5. **QoS**: Bandwidth limiting on a per-port basis
+6. **Storm Control**: Limiting broadcast, multicast, and unknown unicast traffic
+7. **Port Monitoring**: Monitoring port state and updating OpenStack port status
+
+Advanced Features Configuration
+-----------------------------
+
+Port Security Features:
+
+* ``enable_port_security``: Enable port security features (default: True)
+* When enabled, configures BPDU guard, loop guard, and STP port fast on access ports
+
+QoS Features:
+
+* ``enable_qos``: Enable QoS features (default: False)
+* ``default_bandwidth_limit``: Default bandwidth limit in Kbps (0 means unlimited)
+
+Storm Control:
+
+* ``enable_storm_control``: Enable storm control on ports (default: False)
+* ``storm_control_broadcasting``: Storm control threshold for broadcast traffic (0-100%)
+* ``storm_control_multicasting``: Storm control threshold for multicast traffic (0-100%)
+* ``storm_control_unknown_unicast``: Storm control threshold for unknown unicast traffic (0-100%)
+
+Port Monitoring:
+
+* ``monitor_port_state``: Monitor port state and update OpenStack port status (default: True)
+* ``monitor_interval``: Interval in seconds to monitor port state (default: 60)
+
+Example Configuration
+-------------------
+
+Here's a complete example configuration for the UniFi ML2 driver::
+
+    [ml2]
+    tenant_network_types = vlan
+    type_drivers = local,flat,vlan,gre,vxlan
+    mechanism_drivers = openvswitch,unifi
+    
+    [ml2_type_vlan]
+    network_vlan_ranges = physnet1:100:200,physnet2:300:400
+    
+    [unifi]
+    controller = https://unifi.example.com:8443
+    username = admin
+    password = verysecurepassword
+    site = default
+    verify_ssl = True
+    
+    # Enable QoS with a default limit of 1Gbps
+    enable_qos = True
+    default_bandwidth_limit = 1000000
+    
+    # Enable storm control
+    enable_storm_control = True
+    storm_control_broadcasting = 80
+    storm_control_multicasting = 80
+    storm_control_unknown_unicast = 80
+
+Binding Ports to UniFi Switches
+-----------------------------
+
+To bind a port to a specific UniFi switch port, use the following binding profile format::
+
+    {
+        "binding:profile": {
+            "local_link_information": [
+                {
+                    "switch_id": "78:45:58:ab:cd:ef",  # MAC address of the UniFi switch
+                    "port_id": "3"                    # Port number on the switch
+                }
+            ]
+        }
+    }
+
+The ``switch_id`` must match the MAC address of a UniFi switch managed by the configured UniFi controller.

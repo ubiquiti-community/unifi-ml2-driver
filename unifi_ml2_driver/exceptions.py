@@ -12,70 +12,58 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Exceptions for UniFi ML2 Driver."""
+
 from neutron_lib import exceptions
 
 from unifi_ml2_driver._i18n import _
 
 
 class UnifiException(exceptions.NeutronException):
-    message = _("%(method)s failed.")
-
-
-class UnifiConfigException(exceptions.NeutronException):
-    message = _("%(option)s must be one of: %(allowed_options)s")
-
-
-class UnifiEntrypointLoadError(UnifiException):
-    message = _("Failed to load entrypoint %(ep)s: %(err)s")
-
-
-class UnifiNetworkNameFormatInvalid(UnifiException):
-    message = _("Invalid value for 'ngs_network_name_format': "
-                "%(name_format)s. Valid format options include 'network_id' "
-                "and 'segmentation_id'")
-
-
-class UnifiNetmikoMethodError(UnifiException):
-    message = _("Can not parse arguments: commands %(cmds)s, args %(args)s")
-
-
-class UnifiNetmikoNotSupported(UnifiException):
-    message = _("Netmiko does not support device type %(device_type)s")
-
-
-class UnifiNetmikoConnectError(UnifiException):
-    message = _("Failed to connect to Netmiko switch. "
-                "Please contact your administrator.")
-
-
-class UnifiNetmikoConfigError(UnifiException):
-    message = _("Netmiko switch configuration operation failed. "
-                "Please contact your administrator.")
-
-
-class UnifiBatchError(UnifiException):
-    message = _("Batching error: %(device)s, error: %(error)s")
-
-
-class UnifiNotSupported(UnifiException):
-    message = _("Requested feature %(feature)s is not supported by "
-                "networking-generic-switch on the %(switch)s. %(error)s")
-
-class AlreadyConfigured(UnifiException):
-    """Controller is already configured."""
-
-
-class AuthenticationRequired(UnifiException):
-    """Unknown error occurred."""
+    """Base UniFi Exception."""
+    message = _("UniFi failure: %(reason)s")
 
 
 class CannotConnect(UnifiException):
-    """Unable to connect to UniFi Network."""
+    """Raised when connection to UniFi controller fails."""
+    message = _("Cannot connect to UniFi controller: %(reason)s")
 
 
-class LoginRequired(UnifiException):
-    """Integration got logged out."""
+class AuthenticationRequired(UnifiException):
+    """Raised when authentication to UniFi controller fails."""
+    message = _("Authentication to UniFi controller failed: %(reason)s")
 
 
-class UserLevel(UnifiException):
-    """User level too low."""
+class UnifiNetmikoConfigError(UnifiException):
+    """Raised when configuration operation fails."""
+    message = _("Failed to configure UniFi device: %(reason)s")
+
+
+class UnifiVLANConfigError(UnifiException):
+    """Raised when VLAN configuration operation fails."""
+    message = _("Failed to configure VLAN: %(reason)s")
+
+
+class UnifiPortNotFound(UnifiException):
+    """Raised when port is not found on the device."""
+    message = _("Port not found on device: %(reason)s")
+
+
+class UnifiDeviceNotFound(UnifiException):
+    """Raised when device is not found."""
+    message = _("Device not found: %(reason)s")
+
+
+class UnifiQoSConfigError(UnifiException):
+    """Raised when QoS configuration fails."""
+    message = _("Failed to configure QoS: %(reason)s")
+
+
+class UnifiPortSecurityConfigError(UnifiException):
+    """Raised when port security configuration fails."""
+    message = _("Failed to configure port security: %(reason)s")
+
+
+class UnifiTrunkConfigError(UnifiException):
+    """Raised when trunk port configuration fails."""
+    message = _("Failed to configure trunk port: %(reason)s")

@@ -11,41 +11,66 @@ MYPY := $(shell command -v mypy 2> /dev/null)
 .PHONY: all
 all: install lint test
 
-.PHONY: help
+.PHONY: help install dev-install clean lint format test test-cov pre-commit update
+
+# Display help information
 help:
-	@echo "Please use 'make <target>', where <target> is one of"
+	@echo "UniFi ML2 Driver Make Commands"
 	@echo ""
-	@echo "  install     install packages and prepare environment"
-	@echo "  lint        run the code linters"
-	@echo "  test        run all the tests"
-	@echo "  all         install, lint, and test the project"
-	@echo "  clean       remove all temporary files listed in .gitignore"
+	@echo "Usage: make [command]"
 	@echo ""
-	@echo "Check the Makefile to know exactly what each target is doing."
-	@echo "Most actions are configured in 'pyproject.toml'."
+	@echo "Commands:"
+	@echo "  install          Install the package and dependencies"
+	@echo "  dev-install      Install the package and development dependencies"
+	@echo "  clean            Remove build artifacts"
+	@echo "  lint             Run linting (flake8, mypy)"
+	@echo "  format           Format code (black, isort)"
+	@echo "  test             Run tests"
+	@echo "  test-cov         Run tests with coverage"
+	@echo "  pre-commit       Run pre-commit checks on all files"
+	@echo "  update           Update dependencies"
 
-install: $(INSTALL_STAMP)
-$(INSTALL_STAMP): pyproject.toml
-	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
-	$(POETRY) run pip install --upgrade pip setuptools
-	$(POETRY) install --with dev,tests,linters
-	touch $(INSTALL_STAMP)
+# Install the package
+install:
+	poetry install --no-dev
 
-.PHONY: lint
-lint: $(INSTALL_STAMP)
-    # Configured in pyproject.toml
-    # Skips mypy if not installed
-    # 
-    # $(POETRY) run black --check $(TESTS) $(PYMODULE) --diff
-	@if [ -z $(MYPY) ]; then echo "Mypy not found, skipping..."; else echo "Running Mypy..."; $(POETRY) run mypy $(PYMODULE) $(TESTS); fi
-	@echo "Running Ruff..."; $(POETRY) run ruff . --fix
+# Install the package with development dependencies
+dev-install:
+	poetry install
 
-.PHONY: test
-test: $(INSTALL_STAMP)
-    # Configured in pyproject.toml
-	$(POETRY) run pytest
-
-.PHONY: clean
+# Clean build artifacts
 clean:
-    # Delete all files in .gitignore
-	git clean -Xdf
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
+	rm -rf .pytest_cache/
+	rm -rf .coverage
+	rm -rf htmlcov/
+	rm -rf coverage.xml
+	find . -type d -name __pycache__ -exec rm -rf {} +
+
+# Run linting
+lint:
+	poetry run flake8 unifi_ml2_driver
+	poetry run mypy unifi_ml2_driver
+
+# Format code
+format:
+	poetry run black unifi_ml2_driver
+	poetry run isort unifi_ml2_driver
+
+# Run tests
+test:
+	poetry run pytest
+
+# Run tests with coverage
+test-cov:
+	poetry run pytest --cov=unifi_ml2_driver --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+
+# Run pre-commit checks
+pre-commit:
+	poetry run pre-commit run --all-files
+
+# Update dependencies
+update:
+	poetry update
