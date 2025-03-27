@@ -21,11 +21,11 @@ from unifi_ml2_driver import config
 
 
 fake_config = """
-[genericswitch:foo]
+[unifi:foo]
 device_type = foo_device
 spam = eggs
 
-[genericswitch:bar]
+[unifi:bar]
 device_type = bar_device
 ham = vikings
 """

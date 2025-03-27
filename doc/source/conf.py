@@ -81,7 +81,7 @@ latex_documents = [
 
 # -- sphinxcontrib.apidoc configuration --------------------------------------
 
-apidoc_module_dir = '../../networking_generic_switch'
+apidoc_module_dir = '../../unifi_ml2_driver'
 apidoc_output_dir = 'contributor/api'
 apidoc_excluded_paths = [
     'tests',

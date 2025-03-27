@@ -90,7 +90,7 @@ class SwitchQueueTest(fixtures.TestWithFixtures):
         mock_uuid.return_value = "uuid"
         self.client.transaction.return_value = {"succeeded": False}
 
-        self.assertRaises(exc.GenericSwitchBatchError,
+        self.assertRaises(exc.UnifiBatchError,
                           self.queue.add_batch, ["cmd1", "cmd2"])
 
     @mock.patch.object(batching.SwitchQueue, "_get_and_delete_result",
@@ -144,7 +144,7 @@ class SwitchQueueTest(fixtures.TestWithFixtures):
     def test_get_and_delete_result_failure(self):
         self.client.transaction.return_value = {"succeeded": False}
 
-        self.assertRaises(exc.GenericSwitchBatchError,
+        self.assertRaises(exc.UnifiBatchError,
                           self.queue._get_and_delete_result, b"result_key")
 
     def test_get_batches(self):
@@ -351,9 +351,9 @@ class SwitchBatchTest(fixtures.TestWithFixtures):
         device = mock.MagicMock()
         lock = mock.MagicMock()
         self.queue.acquire_worker_lock.return_value = lock
-        mock_send.side_effect = exc.GenericSwitchBatchError
+        mock_send.side_effect = exc.UnifiBatchError
 
-        self.assertRaises(exc.GenericSwitchBatchError,
+        self.assertRaises(exc.UnifiBatchError,
                           self.batch._execute_pending_batches,
                           device, "item")
 
@@ -433,7 +433,7 @@ class SwitchBatchTest(fixtures.TestWithFixtures):
         lock = mock.MagicMock()
         lock.is_acquired.return_value = False
 
-        self.assertRaises(exc.GenericSwitchBatchError,
+        self.assertRaises(exc.UnifiBatchError,
                           self.batch._send_commands, device, batches, lock)
 
         connection = device._get_connection.return_value.__enter__.return_value

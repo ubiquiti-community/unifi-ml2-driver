@@ -18,6 +18,29 @@ from oslo_log import log as logging
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
+unifi_opts = [
+    cfg.StrOpt('controller',
+                help='IP address of UniFi controller'),
+    cfg.StrOpt('username',
+                help='Username for UniFi controller'),
+    cfg.StrOpt('password',
+                help='Password for UniFi controller',
+                secret=True),
+    cfg.StrOpt('site_id',
+                help='Site ID for UniFi controller'),
+    cfg.StrOpt('version',
+                help='UniFi controller version'),
+    cfg.BoolOpt('verify_ssl',
+                default=True,
+                help='Verify SSL certificate'),
+    cfg.StrOpt('cafile',
+                help='CA certificate file'),
+    cfg.StrOpt('certfile',
+                help='Certificate file'),
+    cfg.StrOpt('keyfile',
+                help='Key file')
+]
+
 coordination_opts = [
     cfg.StrOpt('backend_url',
                secret=True,
@@ -35,6 +58,7 @@ ngs_opts = [
                help='Netmiko session log file.')
 ]
 
+CONF.register_opts(unifi_opts, group="unifi")
 CONF.register_opts(coordination_opts, group='ngs_coordination')
 CONF.register_opts(ngs_opts, group='ngs')
 
@@ -42,7 +66,7 @@ CONF.register_opts(ngs_opts, group='ngs')
 def get_devices():
     """Parse supplied config files and fetch defined supported devices."""
 
-    device_tag = 'genericswitch:'
+    device_tag = 'unifi:'
     devices = {}
 
     for filename in CONF.config_file:

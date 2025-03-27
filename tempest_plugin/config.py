@@ -30,7 +30,7 @@ NGSGroup = [
                default='ovs_linux',
                help='Type of the switch.'),
     cfg.StrOpt('bridge_name',
-               default='genericswitch',
+               default='unifi',
                help='Bridge name to use.'),
     cfg.StrOpt('port_name',
                default='gs_port_01',

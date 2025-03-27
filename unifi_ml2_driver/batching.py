@@ -131,7 +131,7 @@ class SwitchQueue(object):
         success = result.get('succeeded', False)
         # Be sure to free watcher resources on error
         if not success:
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error="Failed to add batch to input key: %s" % input_key)
 
@@ -156,13 +156,13 @@ class SwitchQueue(object):
             event = self.client.watch_once(result_key, timeout=timeout,
                                            start_revision=item.create_revision)
         except etcd3gw_exc.WatchTimedOut:
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error="Timed out waiting for result key: %s" % result_key)
 
         LOG.debug("got event: %s", event)
         if event["kv"]["version"] == 0:
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error="Output key was deleted, perhaps lease expired")
         # TODO(johngarbutt) check we have the create event and result?
@@ -171,7 +171,7 @@ class SwitchQueue(object):
         if "result" in result_dict:
             return result_dict["result"]
         else:
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error=result_dict["error"])
 
@@ -190,7 +190,7 @@ class SwitchQueue(object):
         result = self.client.transaction(txn)
         success = result.get('succeeded', False)
         if not success:
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error="Unable to find result: %s" % result_key)
         delete_response = result['responses'][0]['response_delete_range']
@@ -400,7 +400,7 @@ class SwitchBatch(object):
 
         # Check we got the lock
         if not lock.is_acquired():
-            raise exc.GenericSwitchBatchError(
+            raise exc.UnifiBatchError(
                 device=self.switch_name,
                 error="unable to get lock for: %s" % self.switch_name)
 
@@ -436,7 +436,7 @@ class SwitchBatch(object):
                 # we still own the lock before recording the results.
                 lock.refresh()
                 if not lock.is_acquired():
-                    raise exc.GenericSwitchBatchError(
+                    raise exc.UnifiBatchError(
                         device=self.switch_name,
                         error="Worker aborting - lock timed out")
 

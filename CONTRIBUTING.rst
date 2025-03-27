@@ -2,7 +2,7 @@
 Contributing to Networking-generic-switch
 #########################################
 
-If you would like to contribute to the development of GenericSwitch project, you must follow the
+If you would like to contribute to the development of Unifi project, you must follow the
 general OpenStack community procedures documented at:
 
    https://docs.openstack.org/infra/manual/developers.html#development-workflow
@@ -15,7 +15,7 @@ Contributor License Agreement
 .. index::
    single: license; agreement
 
-In order to contribute to the GenericSwitch project, you need to have
+In order to contribute to the Unifi project, you need to have
 signed OpenStack's contributor's agreement.
 
 .. seealso::
@@ -47,7 +47,7 @@ Creating new device plugins
 ===========================
 
 #. Subclass the abstract class
-   ``networking_generic_switch.devices.GenericSwitch``
+   ``unifi_ml2_driver.devices.Unifi``
    and implement all the abstract methods it defines.
 
    * Your class must accept as first argument a dictionary that contains
@@ -58,9 +58,9 @@ Creating new device plugins
      __init__ method of the parent class: this helps to stay compatible with
      future changes of the base class.
 
-#. Register your class under ``generic_switch.devices`` entrypoint.
+#. Register your class under ``unifi.devices`` entrypoint.
 #. Add your device config to the plugin configuration file
-   (``/etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini`` by default).
+   (``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini`` by default).
    The only required option is ``device_type`` that must be equal to the
    entrypoint you have registered your plugin under, as it is used for plugin
    lookup (see provided ``Netmiko``-based plugins for example).
@@ -68,11 +68,11 @@ Creating new device plugins
 
 Additional Contributor Resources
 ================================
-GenericSwitch is a member of the Bare Metal (ironic) program in OpenStack.
-Development of GenericSwitch follows many ironic conventions.
+Unifi is a member of the Bare Metal (ironic) program in OpenStack.
+Development of Unifi follows many ironic conventions.
 
 The `Ironic developer quickstart <https://docs.openstack.org/ironic/latest/contributor/dev-quickstart.html>_`
 has some relevant information -- particularly on unit testing with tox,
 integration testing with devstack, and other information that may be useful
-for GenericSwitch developers. As the documentation is written targeting
+for Unifi developers. As the documentation is written targeting
 Ironic, it should only be used as a general guideline.

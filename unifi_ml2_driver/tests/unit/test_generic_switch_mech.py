@@ -23,15 +23,15 @@ from neutron_lib.plugins import directory
 
 from unifi_ml2_driver.devices import utils as device_utils
 from unifi_ml2_driver import exceptions
-from unifi_ml2_driver import generic_switch_mech as gsm
+from unifi_ml2_driver import unifi_mech as gsm
 
 
-@mock.patch('networking_generic_switch.config.get_devices',
+@mock.patch('unifi_ml2_driver.config.get_devices',
             return_value={'foo': {'device_type': 'bar', 'spam': 'ham',
                                   'ip': 'ip'}}, autospec=True)
-class TestGenericSwitchDriver(unittest.TestCase):
+class TestUnifiDriver(unittest.TestCase):
     def setUp(self):
-        super(TestGenericSwitchDriver, self).setUp()
+        super(TestUnifiDriver, self).setUp()
         self.switch_mock = mock.Mock()
         self.switch_mock.config = {'device_type': 'bar', 'spam': 'ham',
                                    'ip': 'ip'}
@@ -39,13 +39,13 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.ctxt = mock.MagicMock()
         self.db = mock.MagicMock()
         patcher = mock.patch(
-            'networking_generic_switch.devices.device_manager',
+            'unifi_ml2_driver.devices.device_manager',
             return_value=self.switch_mock, autospec=True)
         patcher.start()
         self.addCleanup(patcher.stop)
 
     def test_create_network_postcommit(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -57,7 +57,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.add_network.assert_called_once_with(22, 22)
 
     def test_create_network_postcommit_with_physnet(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -70,7 +70,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.add_network.assert_called_once_with(22, 22)
 
     def test_create_network_postcommit_with_multiple_physnets(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -85,7 +85,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertEqual(self.switch_mock.add_network.call_count, 1)
 
     def test_create_network_postcommit_with_different_physnet(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -97,10 +97,10 @@ class TestGenericSwitchDriver(unittest.TestCase):
         driver.create_network_postcommit(mock_context)
         self.assertFalse(self.switch_mock.add_network.called)
 
-    @mock.patch('networking_generic_switch.generic_switch_mech.LOG',
+    @mock.patch('unifi_ml2_driver.unifi_mech.LOG',
                 autospec=True)
     def test_create_network_postcommit_failure(self, m_log, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         self.switch_mock.add_network.side_effect = ValueError('boom')
         mock_context = mock.create_autospec(driver_context.NetworkContext)
@@ -116,14 +116,14 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertIn('Failed to create network', m_log.error.call_args[0][0])
         self.assertNotIn('has been added', m_log.info.call_args[0][0])
 
-    @mock.patch('networking_generic_switch.generic_switch_mech.LOG',
+    @mock.patch('unifi_ml2_driver.unifi_mech.LOG',
                 autospec=True)
     def test_create_network_postcommit_failure_multiple(self, m_log, m_list):
         m_list.return_value = {
             'foo': {'device_type': 'bar', 'spam': 'ham', 'ip': 'ip'},
             'bar': {'device_type': 'bar', 'spam': 'ham', 'ip': 'ip'},
         }
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         self.switch_mock.add_network.side_effect = ValueError('boom')
         mock_context = mock.create_autospec(driver_context.NetworkContext)
@@ -139,7 +139,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertIn('Failed to create network', m_log.error.call_args[0][0])
 
     def test_delete_network_postcommit(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -151,7 +151,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.del_network.assert_called_once_with(22, 22)
 
     def test_delete_network_postcommit_with_physnet(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -164,7 +164,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.del_network.assert_called_once_with(22, 22)
 
     def test_delete_network_postcommit_with_multiple_physnets(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -179,7 +179,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertEqual(self.switch_mock.del_network.call_count, 1)
 
     def test_delete_network_postcommit_with_different_physnet(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,
@@ -191,10 +191,10 @@ class TestGenericSwitchDriver(unittest.TestCase):
         driver.delete_network_postcommit(mock_context)
         self.assertFalse(self.switch_mock.del_network.called)
 
-    @mock.patch('networking_generic_switch.generic_switch_mech.LOG',
+    @mock.patch('unifi_ml2_driver.unifi_mech.LOG',
                 autospec=True)
     def test_delete_network_postcommit_failure(self, m_log, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         self.switch_mock.del_network.side_effect = ValueError('boom')
         mock_context = mock.create_autospec(driver_context.NetworkContext)
@@ -210,14 +210,14 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertIn('Failed to delete network', m_log.error.call_args[0][0])
         self.assertNotIn('has been deleted', m_log.info.call_args[0][0])
 
-    @mock.patch('networking_generic_switch.generic_switch_mech.LOG',
+    @mock.patch('unifi_ml2_driver.unifi_mech.LOG',
                 autospec=True)
     def test_delete_network_postcommit_failure_multiple(self, m_log, m_list):
         m_list.return_value = {
             'foo': {'device_type': 'bar', 'spam': 'ham', 'ip': 'ip'},
             'bar': {'device_type': 'bar', 'spam': 'ham', 'ip': 'ip'},
         }
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         self.switch_mock.del_network.side_effect = ValueError('boom')
         mock_context = mock.create_autospec(driver_context.NetworkContext)
@@ -234,7 +234,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.assertIn('Failed to delete network', m_log.error.call_args[0][0])
 
     def test_delete_port_postcommit(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context.current = {'binding:profile':
@@ -258,7 +258,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
             '2222', 123)
 
     def test_delete_portgroup_postcommit(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context.current = {'binding:profile':
@@ -287,7 +287,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
              mock.call(3333, 123)])
 
     def test_delete_portgroup_postcommit_802_3ad(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context.current = {'binding:profile':
@@ -320,11 +320,11 @@ class TestGenericSwitchDriver(unittest.TestCase):
              mock.call(3333, 123)])
 
     def test_delete_port_postcommit_failure(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         self.switch_mock.delete_port.side_effect = (
-            exceptions.GenericSwitchNetmikoMethodError(cmds='foo',
+            exceptions.UnifiNetmikoMethodError(cmds='foo',
                                                        args='bar'))
         mock_context.current = {'binding:profile':
                                 {'local_link_information':
@@ -342,12 +342,12 @@ class TestGenericSwitchDriver(unittest.TestCase):
                                           'physical_network': 'physnet1',
                                           'network_id': 'aaaa-bbbb-ccc'}
 
-        self.assertRaises(exceptions.GenericSwitchNetmikoMethodError,
+        self.assertRaises(exceptions.UnifiNetmikoMethodError,
                           driver.delete_port_postcommit,
                           mock_context)
 
     def test_delete_port_postcommit_unknown_switch(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context.current = {'binding:profile':
@@ -365,7 +365,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.delete_port.assert_not_called()
 
     def test_delete_port_postcommit_no_segmentation_id(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context.current = {'binding:profile':
@@ -391,7 +391,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_not_bound(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -419,7 +419,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_not_baremetal(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -447,7 +447,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_no_llc(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -467,7 +467,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_not_managed_by_ngs(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -495,7 +495,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_complete_provisioning(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -532,7 +532,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     def test_update_portgroup_postcommit_complete_provisioning(self,
                                                                m_pc,
                                                                m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -576,7 +576,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     def test_update_portgroup_postcommit_complete_provisioning_802_3ad(self,
                                                                        m_pc,
                                                                        m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -622,7 +622,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_with_physnet(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -657,7 +657,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_with_different_physnet(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -688,7 +688,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_unbind_not_bound(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -708,7 +708,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_unbind_not_baremetal(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -736,7 +736,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_unbind_no_llc(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -757,7 +757,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
                        autospec=True)
     def test_update_port_postcommit_unbind_not_managed_by_ngs(self, m_pc,
                                                               m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -785,7 +785,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_unbind(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -818,7 +818,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_trunk_not_supported(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -854,7 +854,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
         self.switch_mock.support_trunk_on_bond_ports = False
         self.switch_mock.support_trunk_on_ports = False
 
-        with self.assertRaises(exceptions.GenericSwitchNotSupported):
+        with self.assertRaises(exceptions.UnifiNotSupported):
             driver.update_port_postcommit(mock_context)
         self.switch_mock.plug_port_to_network.assert_not_called()
         m_pc.assert_not_called()
@@ -862,7 +862,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_port_postcommit_trunk(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -904,7 +904,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'provisioning_complete',
                        autospec=True)
     def test_update_portgroup_postcommit_unbind(self, m_pc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -943,7 +943,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -977,7 +977,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_portgroup(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -1017,7 +1017,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_portgroup_802_3ad(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -1062,7 +1062,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port_with_physnet(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -1098,7 +1098,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_portgroup_port_not_supported(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         driver._is_port_supported = mock.MagicMock(return_value=False)
         mock_context = mock.create_autospec(driver_context.PortContext)
@@ -1133,7 +1133,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port_with_physnet_port_not_supported(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         driver._is_port_supported = mock.MagicMock(return_value=False)
         mock_context = mock.create_autospec(driver_context.PortContext)
@@ -1165,7 +1165,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port_port_not_supported(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         driver._is_port_supported = mock.MagicMock(return_value=False)
         mock_context = mock.create_autospec(driver_context.PortContext)
@@ -1198,7 +1198,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_portgroup_802_3ad_port_not_supported(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         driver._is_port_supported = mock.MagicMock(return_value=False)
         mock_context = mock.create_autospec(driver_context.PortContext)
@@ -1240,7 +1240,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port_unknown_switch(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -1271,7 +1271,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(provisioning_blocks, 'add_provisioning_component',
                        autospec=True)
     def test_bind_port_with_different_physnet(self, m_apc, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.PortContext)
         mock_context._plugin_context = mock.MagicMock()
@@ -1304,7 +1304,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_added_other_port(self, mock_get_switch, mock_plugin,
                                        m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1329,7 +1329,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
 
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_added_no_llc(self, mock_get_switch, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1346,7 +1346,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
     @mock.patch.object(directory, "get_plugin", autospec=True)
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_added(self, mock_get_switch, mock_plugin, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1372,7 +1372,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
 
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_deleted_other_port(self, mock_get_switch, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1394,7 +1394,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
 
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_deleted_no_llc(self, mock_get_switch, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1410,7 +1410,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
 
     @mock.patch.object(device_utils, "get_switch_device", autospec=True)
     def test_subports_deleted(self, mock_get_switch, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
 
         parent_port = {
@@ -1432,7 +1432,7 @@ class TestGenericSwitchDriver(unittest.TestCase):
             [mock.call(parent_port['binding:profile'], 2222, subports)])
 
     def test_empty_methods(self, m_list):
-        driver = gsm.GenericSwitchDriver()
+        driver = gsm.UnifiDriver()
         driver.initialize()
         mock_context = mock.create_autospec(driver_context.NetworkContext)
         mock_context.current = {'id': 22,

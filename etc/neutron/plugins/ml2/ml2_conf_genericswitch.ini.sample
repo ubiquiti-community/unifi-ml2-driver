@@ -1,4 +1,4 @@
-[genericswitch:c2970G]
+[unifi:c2970G]
 device_type=netmiko_cisco_ios
 ip=1.2.3.4
 username=user

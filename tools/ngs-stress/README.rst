@@ -2,10 +2,10 @@
 Networking-generic-switch Stress Test
 =====================================
 
-Stress test for the OpenStack Neutron networking-generic-switch (genericswitch)
+Stress test for the OpenStack Neutron networking-generic-switch (unifi)
 ML2 mechanism driver.
 
-This script can stress a switch using the genericswitch driver.  It does not
+This script can stress a switch using the unifi driver.  It does not
 require an OpenStack or Neutron installation, and can operate in isolation.
 There are two modes of operation:
 
@@ -14,7 +14,7 @@ network
 port
     Create and delete a number of ports in parallel.
 
-It is possible to use an existing genericswitch configuration file containing
+It is possible to use an existing unifi configuration file containing
 switch configuration.
 
 Installation
@@ -44,7 +44,7 @@ driver for testing:
 
 .. code-block:: ini
 
-   [genericswitch:fake]
+   [unifi:fake]
    device_type = netmiko_fake
 
 Other drivers will typically require further configuration.

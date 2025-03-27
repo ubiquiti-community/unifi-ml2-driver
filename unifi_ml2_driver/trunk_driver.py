@@ -27,7 +27,7 @@ from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
-MECH_DRIVER_NAME = 'genericswitch'
+MECH_DRIVER_NAME = 'unifi'
 
 SUPPORTED_INTERFACES = (
     portbindings.VIF_TYPE_OTHER,
@@ -39,7 +39,7 @@ SUPPORTED_SEGMENTATION_TYPES = (
 )
 
 
-class GenericSwitchTrunkDriver(trunk_base.DriverBase):
+class UnifiTrunkDriver(trunk_base.DriverBase):
     @property
     def is_loaded(self):
         try:
@@ -50,9 +50,9 @@ class GenericSwitchTrunkDriver(trunk_base.DriverBase):
 
     @registry.receives(resources.TRUNK_PLUGIN, [events.AFTER_INIT])
     def register(self, resource, event, trigger, payload=None):
-        super(GenericSwitchTrunkDriver, self).register(
+        super(UnifiTrunkDriver, self).register(
             resource, event, trigger, payload=payload)
-        self._handler = GenericSwitchTrunkHandler(self.plugin_driver)
+        self._handler = UnifiTrunkHandler(self.plugin_driver)
         registry.subscribe(
             self._handler.subports_added,
             resources.SUBPORTS,
@@ -72,7 +72,7 @@ class GenericSwitchTrunkDriver(trunk_base.DriverBase):
                    can_trunk_bound_port=True)
 
 
-class GenericSwitchTrunkHandler(object):
+class UnifiTrunkHandler(object):
     def __init__(self, plugin_driver):
         self.plugin_driver = plugin_driver
         self.core_plugin = directory.get_plugin()
@@ -80,7 +80,7 @@ class GenericSwitchTrunkHandler(object):
     def subports_added(self, resource, event, trunk_plugin, payload):
         trunk = payload.states[0]
         subports = payload.metadata['subports']
-        LOG.debug("GenericSwitch: subports added %s to trunk %s",
+        LOG.debug("Unifi: subports added %s to trunk %s",
                   subports, trunk)
         context = n_context.get_admin_context()
         with db_api.CONTEXT_READER.using(context):
@@ -96,7 +96,7 @@ class GenericSwitchTrunkHandler(object):
     def subports_deleted(self, resource, event, trunk_plugin, payload):
         trunk = payload.states[0]
         subports = payload.metadata['subports']
-        LOG.debug("GenericSwitch: subports deleted %s from trunk %s",
+        LOG.debug("Unifi: subports deleted %s from trunk %s",
                   subports, trunk)
         context = n_context.get_admin_context()
         with db_api.CONTEXT_READER.using(context):

@@ -85,10 +85,10 @@ Test with real hardware
 -----------------------
 
 Add information about hardware switch to Networking-generic-switch
-config ``/etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini`` and
+config ``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini`` and
 restart Neutron server::
 
-    [genericswitch:cisco_switch_1]
+    [unifi:cisco_switch_1]
     device_type = netmiko_cisco_ios
     ip = 1.2.3.4
     username = cisco

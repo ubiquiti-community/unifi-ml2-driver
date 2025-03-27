@@ -45,8 +45,8 @@ source $TARGET_DEVSTACK_DIR/lib/keystone
 source $TARGET_DEVSTACK_DIR/lib/neutron
 
 
-GENERIC_SWITCH_DEVSTACK_DIR=$(dirname "$0")/..
-source $GENERIC_SWITCH_DEVSTACK_DIR/plugin.sh
+UNIFI_DEVSTACK_DIR=$(dirname "$0")/..
+source $UNIFI_DEVSTACK_DIR/plugin.sh
 
 neutron_plugin_configure_common
 Q_PLUGIN_CONF_FILE=$Q_PLUGIN_CONF_PATH/$Q_PLUGIN_CONF_FILENAME
@@ -62,7 +62,7 @@ fi
 set -o xtrace
 
 
-stack_install_service generic_switch
+stack_install_service unifi
 
 # calls upgrade-networking-generic-switch for specific release
 upgrade_project networking-generic-switch $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANCH
@@ -72,7 +72,7 @@ AGENT_METERING_BINARY=${AGENT_METERING_BINARY:-"$NEUTRON_BIN_DIR/neutron-meterin
 METERING_AGENT_CONF_FILENAME=${METERING_AGENT_CONF_FILENAME:-"/etc/neutron/services/metering/metering_agent.ini"}
 
 # NOTE(vsaienko) restart neutron to use new networking-generic-switch
-neutron_server_config_add ${GENERIC_SWITCH_INI_FILE}
+neutron_server_config_add ${UNIFI_INI_FILE}
 stop_neutron
 # Start neutron and agents
 start_neutron_service_and_check

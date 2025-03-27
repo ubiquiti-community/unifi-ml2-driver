@@ -2,17 +2,17 @@
     name: networking-generic-switch-tempest-dlm
     parent: devstack-tempest
     irrelevant-files:
-      - ^.*\.rst$
-      - ^doc/.*$
-      - ^networking_generic_switch/tests/.*$
-      - ^releasenotes/.*$
-      - ^setup.cfg$
-      - ^test-requirements.txt$
-      - ^tools/.*$
-      - ^tox.ini$
+    - ^.*\.rst$
+    - ^doc/.*$
+    - ^unifi_ml2_driver/tests/.*$
+    - ^releasenotes/.*$
+    - ^setup.cfg$
+    - ^test-requirements.txt$
+    - ^tools/.*$
+    - ^tox.ini$
     timeout: 4800
     required-projects:
-      - openstack/networking-generic-switch
+    - openstack/networking-generic-switch
     vars:
       tox_envlist: py3
       tempest_test_regex: ngs
@@ -20,7 +20,7 @@
         networking-generic-switch: https://opendev.org/openstack/networking-generic-switch
       devstack_localrc:
         ENABLE_TENANT_VLANS: True
-        GENERIC_SWITCH_USER_MAX_SESSIONS: 2
+        UNIFI_USER_MAX_SESSIONS: 2
         OVS_PHYSICAL_BRIDGE: brbm
         PHYSICAL_NETWORK: mynetwork
         Q_AGENT: openvswitch
@@ -35,7 +35,7 @@
         cinder: False
         etcd3: True
         g-api: False
-        generic_switch: True
+        unifi: True
         glace: False
         key: True
         mysql: True

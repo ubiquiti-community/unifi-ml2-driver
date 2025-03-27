@@ -17,8 +17,8 @@ set -o errexit
 source $GRENADE_DIR/grenaderc
 source $GRENADE_DIR/functions
 
-GENERIC_SWITCH_DEVSTACK_DIR=$(cd $(dirname "$0")/.. && pwd)
-source $GENERIC_SWITCH_DEVSTACK_DIR/plugin.sh
+UNIFI_DEVSTACK_DIR=$(cd $(dirname "$0")/.. && pwd)
+source $UNIFI_DEVSTACK_DIR/plugin.sh
 
 set -o xtrace
 

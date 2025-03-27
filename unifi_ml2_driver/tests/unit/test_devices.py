@@ -21,11 +21,11 @@ from unifi_ml2_driver import devices
 from unifi_ml2_driver import exceptions as exc
 
 
-class FakeFaultyDevice(devices.GenericSwitchDevice):
+class FakeFaultyDevice(devices.UnifiDevice):
     pass
 
 
-class FakeDevice(devices.GenericSwitchDevice):
+class FakeDevice(devices.UnifiDevice):
 
     def add_network(s, n):
         pass
@@ -40,7 +40,7 @@ class FakeDevice(devices.GenericSwitchDevice):
         pass
 
 
-class TestGenericSwitchDevice(unittest.TestCase):
+class TestUnifiDevice(unittest.TestCase):
 
     def test_correct_class(self):
         device = FakeDevice({'spam': 'ham'})
@@ -75,36 +75,36 @@ class TestDeviceManager(unittest.TestCase):
     def test_driver_load(self):
         device_cfg = {"device_type": 'netmiko_ovs_linux'}
         device = devices.device_manager(device_cfg)
-        self.assertIsInstance(device, devices.GenericSwitchDevice)
+        self.assertIsInstance(device, devices.UnifiDevice)
         self.assertEqual({'device_type': 'ovs_linux'}, device.config)
 
-    @mock.patch('networking_generic_switch.devices.netmiko_devices.'
+    @mock.patch('unifi_ml2_driver.devices.netmiko_devices.'
                 'NetmikoSwitch.__init__', autospec=True)
     def test_driver_load_fail_invoke(self, switch_init_mock):
-        switch_init_mock.side_effect = exc.GenericSwitchException(
+        switch_init_mock.side_effect = exc.UnifiException(
             method='fake_method')
         device_cfg = {'device_type': 'netmiko_ovs_linux'}
         device = None
-        with self.assertRaises(exc.GenericSwitchEntrypointLoadError) as ex:
+        with self.assertRaises(exc.UnifiEntrypointLoadError) as ex:
             device = devices.device_manager(device_cfg)
         self.assertIn("fake_method", ex.exception.msg)
         self.assertIsNone(device)
 
-    @mock.patch.object(devices.GenericSwitchDevice,
+    @mock.patch.object(devices.UnifiDevice,
                        '_validate_network_name_format', autospec=True)
     def test_driver_load_fail_validate_network_name_format(self,
                                                            mock_validate):
-        mock_validate.side_effect = exc.GenericSwitchConfigException()
+        mock_validate.side_effect = exc.UnifiConfigException()
         device_cfg = {'device_type': 'netmiko_ovs_linux'}
         device = None
-        with self.assertRaises(exc.GenericSwitchEntrypointLoadError):
+        with self.assertRaises(exc.UnifiEntrypointLoadError):
             device = devices.device_manager(device_cfg)
         self.assertIsNone(device)
 
     def test_driver_load_fail_load(self):
         device_cfg = {'device_type': 'fake_device'}
         device = None
-        with self.assertRaises(exc.GenericSwitchEntrypointLoadError) as ex:
+        with self.assertRaises(exc.UnifiEntrypointLoadError) as ex:
             device = devices.device_manager(device_cfg)
         self.assertIn("fake_device", ex.exception.msg)
         self.assertIsNone(device)
@@ -122,7 +122,7 @@ class TestDeviceManager(unittest.TestCase):
                       "ngs_allowed_vlans": "123,124",
                       "ngs_allowed_ports": "Ethernet1/1,Ethernet1/2"}
         device = devices.device_manager(device_cfg)
-        self.assertIsInstance(device, devices.GenericSwitchDevice)
+        self.assertIsInstance(device, devices.UnifiDevice)
         self.assertNotIn('ngs_mac_address', device.config)
         self.assertNotIn('ngs_ssh_connect_timeout', device.config)
         self.assertNotIn('ngs_ssh_connect_interval', device.config)
@@ -190,7 +190,7 @@ class TestDeviceManager(unittest.TestCase):
     def test_driver_ngs_config_defaults(self):
         device_cfg = {"device_type": 'netmiko_ovs_linux'}
         device = devices.device_manager(device_cfg)
-        self.assertIsInstance(device, devices.GenericSwitchDevice)
+        self.assertIsInstance(device, devices.UnifiDevice)
         self.assertNotIn('ngs_mac_address', device.ngs_config)
         self.assertEqual(60, device.ngs_config['ngs_ssh_connect_timeout'])
         self.assertEqual(10, device.ngs_config['ngs_ssh_connect_interval'])
@@ -230,7 +230,7 @@ class TestDeviceManager(unittest.TestCase):
     def test__validate_network_name_format_failure(self):
         device_cfg = {'ngs_network_name_format': '{invalid}'}
         self.assertRaisesRegex(
-            exc.GenericSwitchNetworkNameFormatInvalid,
+            exc.UnifiNetworkNameFormatInvalid,
             r"Invalid value for 'ngs_network_name_format'",
             FakeDevice, device_cfg)
 

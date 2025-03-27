@@ -8,7 +8,7 @@ Networking-generic-switch Neutron ML2 driver
 This is a Modular Layer 2 `Neutron Mechanism driver
 <https://wiki.openstack.org/wiki/Neutron/ML2>`_. The mechanism driver is
 responsible for applying configuration information to hardware equipment.
-``GenericSwitch`` provides a pluggable framework to implement
+``Unifi`` provides a pluggable framework to implement
 functionality required for use-cases like OpenStack Ironic multi-tenancy mode.
 It abstracts applying changes to all switches managed by this ML2 plugin
 and handling ``local_link_information`` field of Neutron port.

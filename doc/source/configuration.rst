@@ -7,7 +7,7 @@ be created/updated with the appropriate configuration information.
 
 Switch configuration format::
 
-    [genericswitch:<switch name>]
+    [unifi:<switch name>]
     device_type = <netmiko device type>
     ngs_mac_address = <switch mac address>
     ip = <IP address of switch>
@@ -40,12 +40,12 @@ Examples
 ========
 
 These example device configuration snippets are assumed to be part to a
-specific file ``/etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini``, but
+specific file ``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini``, but
 they could also be added directly to ``/etc/neutron/plugins/ml2/ml2_conf.ini``.
 
 Here is an example for the Cisco 300 series device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_cisco_s300
     ngs_mac_address = <switch mac address>
     username = admin
@@ -54,7 +54,7 @@ Here is an example for the Cisco 300 series device::
 
 for the Cisco IOS device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_cisco_ios
     ngs_mac_address = <switch mac address>
     username = admin
@@ -64,7 +64,7 @@ for the Cisco IOS device::
 
 for the Cisco NX-OS device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_cisco_nxos
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -74,7 +74,7 @@ for the Cisco NX-OS device::
 
 for the Huawei VRPV3 or VRPV5 device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_huawei
     ngs_mac_address = <switch mac address>
     username = admin
@@ -85,7 +85,7 @@ for the Huawei VRPV3 or VRPV5 device::
 
 for the Huawei VRPV8 device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_huawei_vrpv8
     ngs_mac_address = <switch mac address>
     username = admin
@@ -96,7 +96,7 @@ for the Huawei VRPV8 device::
 
 for the Arista EOS device::
 
-    [genericswitch:arista-hostname]
+    [unifi:arista-hostname]
     device_type = netmiko_arista_eos
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -105,7 +105,7 @@ for the Arista EOS device::
 
 for the Dell Force10 device::
 
-    [genericswitch:dell-hostname]
+    [unifi:dell-hostname]
     device_type = netmiko_dell_force10
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -115,7 +115,7 @@ for the Dell Force10 device::
 
 for the Dell OS10 device::
 
-    [genericswitch:dell-hostname]
+    [unifi:dell-hostname]
     device_type = netmiko_dell_os10
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -125,7 +125,7 @@ for the Dell OS10 device::
 
 for the Dell PowerConnect device::
 
-    [genericswitch:dell-hostname]
+    [unifi:dell-hostname]
     device_type = netmiko_dell_powerconnect
     ip = <switch mgmt ip address>
     username = admin
@@ -145,7 +145,7 @@ connections to each device.
 
 for the Brocade FastIron (ICX) device::
 
-    [genericswitch:hostname-for-fast-iron]
+    [unifi:hostname-for-fast-iron]
     device_type = netmiko_brocade_fastiron
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -154,7 +154,7 @@ for the Brocade FastIron (ICX) device::
 
 for the Ruijie device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_ruijie
     ngs_mac_address = <switch mac address>
     username = admin
@@ -164,7 +164,7 @@ for the Ruijie device::
 
 for the HPE 5900 Series device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_hp_comware
     username = admin
     password = password
@@ -172,7 +172,7 @@ for the HPE 5900 Series device::
 
 for the Juniper Junos OS device::
 
-    [genericswitch:hostname-for-juniper]
+    [unifi:hostname-for-juniper]
     device_type = netmiko_juniper
     ip = <switch mgmt ip address>
     username = admin
@@ -182,7 +182,7 @@ for the Juniper Junos OS device::
 
 for a Cumulus Linux device::
 
-    [genericswitch:hostname-for-cumulus]
+    [unifi:hostname-for-cumulus]
     device_type = netmiko_cumulus
     ip = <switch mgmt_ip address>
     username = admin
@@ -192,7 +192,7 @@ for a Cumulus Linux device::
 
 for a Cumulus NVUE Linux device::
 
-    [genericswitch:hostname-for-cumulus]
+    [unifi:hostname-for-cumulus]
     device_type = netmiko_cumulus_nvue
     ip = <switch mgmt_ip address>
     username = admin
@@ -202,7 +202,7 @@ for a Cumulus NVUE Linux device::
 
 for the Nokia SRL series device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_nokia_srl
     username = admin
     password = password
@@ -210,7 +210,7 @@ for the Nokia SRL series device::
 
 for a Pluribus switch::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_pluribus
     username = admin
     password = password
@@ -218,7 +218,7 @@ for a Pluribus switch::
 
 for an ArubaOS-CX switch::
 
-    [genericswitch:aruba-hostname]
+    [unifi:aruba-hostname]
     device_type = netmiko_aruba_os
     username = admin
     password = password
@@ -226,7 +226,7 @@ for an ArubaOS-CX switch::
 
 for the Supermicro device::
 
-    [genericswitch:sw-hostname]
+    [unifi:sw-hostname]
     device_type = netmiko_supermicro_smis
     ngs_mac_address = <switch mac address>
     ip = <switch mgmt ip address>
@@ -237,13 +237,13 @@ for the Supermicro device::
 General configuration
 =====================
 
-Additionally the ``GenericSwitch`` mechanism driver needs to be enabled from
+Additionally the ``Unifi`` mechanism driver needs to be enabled from
 the ml2 config file ``/etc/neutron/plugins/ml2/ml2_conf.ini``::
 
    [ml2]
    tenant_network_types = vlan
    type_drivers = local,flat,vlan,gre,vxlan
-   mechanism_drivers = openvswitch,genericswitch
+   mechanism_drivers = openvswitch,unifi
    ...
 
 Physical networks need to be declared in the ML2 config as well, with a range
@@ -267,7 +267,7 @@ containing switch configuration::
     neutron-server \
         --config-file /etc/neutron/neutron.conf \
         --config-file /etc/neutron/plugins/ml2/ml2_conf.ini \
-        --config-file /etc/neutron/plugins/ml2/ml2_conf_genericswitch.ini
+        --config-file /etc/neutron/plugins/ml2/ml2_conf_unifi.ini
 
 .. _synchronization:
 
@@ -296,7 +296,7 @@ certificate::
 The default behaviour is to limit the number of concurrent active connections
 to each device to one, but the number may be configured per-device as follows::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_max_connections = <max connections>
 
 When synchronization is used, each Neutron thread executing the
@@ -334,7 +334,7 @@ only ``etcd3gw`` is supported.
 Additionally, each device that will use batched configuration should include
 the following option::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_batch_requests = True
 
 Disabling Inactive Ports
@@ -349,7 +349,7 @@ To resolve this issue, it is possible to configure interfaces as
 administratively down when not in use. This is done on a per-device basis,
 using the ``ngs_disable_inactive_ports`` flag::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_disable_inactive_ports = <optional boolean>
 
 This is currently supported by the following devices:
@@ -372,7 +372,7 @@ It is possible to use a different format for the network name using the
 syntax, and accepts the parameters ``{network_id}`` and ``{segmentation_id}``.
 For example::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_network_name_format = neutron-{network_id}-{segmentation_id}
 
 Some switches have issues assigning VLANs a name that starts with a number,
@@ -399,7 +399,7 @@ Once those VLANs and trunk ports are preconfigured on the switch, you can
 use the following configuration to stop networking generic switch adding or
 removing any VLANs::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_manage_vlans = False
 
 Saving configuration on devices
@@ -412,7 +412,7 @@ This may be undesirable for performance reasons, or if you have external means
 of saving configuration on a regular basis.  In this case, configuration saving
 can be disabled::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_save_configuration = False
 
 Trunk ports
@@ -424,7 +424,7 @@ comma-separated list of trunk ports that can be managed by Networking Generic
 Switch.  It will then dynamically tag and untag VLANs on these ports whenever
 it creates and deletes VLANs.  For example::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_trunk_ports = Ethernet1/48, Port-channel1
 
 This is useful when managing several switches in the same physical network,
@@ -452,7 +452,7 @@ created/deleted.
 To this end, each switch can be configured with a list of physical networks
 it belongs to::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_physical_networks = physnet1, physnet2
 
 Physical network names should match the names defined in the ML2 configuration.
@@ -478,7 +478,7 @@ on `Paramiko's disabled_algorithms setting
 The format is a list of ``<type>:<algorithm>`` entries to disable. The same type
 can be repeated several times with different algorithms. Here is an example configuration::
 
-    [genericswitch:device-hostname]
+    [unifi:device-hostname]
     ngs_ssh_disabled_algorithms = kex:diffie-hellman-group-exchange-sha1, ciphers:blowfish-cbc, ciphers:3des-cbc
 
 As of Paramiko 2.9.1, the valid types are ``ciphers``, ``macs``, ``keys``, ``pubkeys``,

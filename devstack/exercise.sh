@@ -2,14 +2,14 @@
 
 set -eux
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-GENERIC_SWITCH_TEST_BRIDGE=genericswitch
-GENERIC_SWITCH_TEST_PORT_NAME=${GENERIC_SWITCH_PORT_NAME:-p_01}
-NEUTRON_GENERIC_SWITCH_TEST_PORT_NAME=generic_switch_test
+UNIFI_TEST_BRIDGE=unifi
+UNIFI_TEST_PORT_NAME=${UNIFI_PORT_NAME:-p_01}
+NEUTRON_UNIFI_TEST_PORT_NAME=unifi_test
 
 function clear_resources {
-    sudo ovs-vsctl --if-exists del-port $GENERIC_SWITCH_TEST_PORT_NAME
-    if neutron port-show $NEUTRON_GENERIC_SWITCH_TEST_PORT_NAME; then
-        neutron port-delete $NEUTRON_GENERIC_SWITCH_TEST_PORT_NAME
+    sudo ovs-vsctl --if-exists del-port $UNIFI_TEST_PORT_NAME
+    if neutron port-show $NEUTRON_UNIFI_TEST_PORT_NAME; then
+        neutron port-delete $NEUTRON_UNIFI_TEST_PORT_NAME
     fi
 }
 
@@ -36,17 +36,17 @@ function wait_for_openvswitch_agent {
 
 clear_resources
 
-sudo ovs-vsctl add-port $GENERIC_SWITCH_TEST_BRIDGE $GENERIC_SWITCH_TEST_PORT_NAME
-sudo ovs-vsctl clear port $GENERIC_SWITCH_TEST_PORT_NAME tag
+sudo ovs-vsctl add-port $UNIFI_TEST_BRIDGE $UNIFI_TEST_PORT_NAME
+sudo ovs-vsctl clear port $UNIFI_TEST_PORT_NAME tag
 
-switch_id=$(ip link show dev $GENERIC_SWITCH_TEST_BRIDGE | egrep -o "ether [A-Za-z0-9:]+"|sed "s/ether\ //")
+switch_id=$(ip link show dev $UNIFI_TEST_BRIDGE | egrep -o "ether [A-Za-z0-9:]+"|sed "s/ether\ //")
 
 wait_for_openvswitch_agent
 
 # create and update Neutron port
-expected_tag=$(python ${DIR}/exercise.py --switch_name $GENERIC_SWITCH_TEST_BRIDGE --port $GENERIC_SWITCH_TEST_PORT_NAME --switch_id=$switch_id)
+expected_tag=$(python ${DIR}/exercise.py --switch_name $UNIFI_TEST_BRIDGE --port $UNIFI_TEST_PORT_NAME --switch_id=$switch_id)
 
-new_tag=$(sudo ovs-vsctl get port $GENERIC_SWITCH_TEST_PORT_NAME tag)
+new_tag=$(sudo ovs-vsctl get port $UNIFI_TEST_PORT_NAME tag)
 
 clear_resources
 

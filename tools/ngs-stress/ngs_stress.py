@@ -23,7 +23,7 @@ from neutron_lib.utils import net
 from oslo_config import cfg
 import oslo_log.log as logging
 
-import unifi_ml2_driver.generic_switch_mech as generic_switch
+import unifi_ml2_driver.unifi_mech as unifi
 
 eventlet.monkey_patch()
 
@@ -165,7 +165,7 @@ def _init():
 
 def main():
     _init()
-    gs = generic_switch.GenericSwitchDriver()
+    gs = unifi.UnifiDriver()
     gs.initialize()
     switch = gs.switches[CONF.switch]
     vlans = range(*map(int, CONF.vlan_range.split(':')))

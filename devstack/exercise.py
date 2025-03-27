@@ -22,7 +22,7 @@ from keystoneauth1 import session
 from neutronclient.v2_0 import client
 
 
-parser = argparse.ArgumentParser(description='GenericSwitch functional test')
+parser = argparse.ArgumentParser(description='Unifi functional test')
 parser.add_argument('--switch_name',
                     type=str,
                     required=True,
@@ -93,7 +93,7 @@ try:
         'port':
             {'network_id': network['id'],
              'admin_state_up': True,
-             'name': 'generic_switch_test'
+             'name': 'unifi_test'
              }
     }
     port_id = nc.create_port(create_body)['port']['id']
