@@ -11,7 +11,7 @@ MYPY := $(shell command -v mypy 2> /dev/null)
 .PHONY: all
 all: install lint test
 
-.PHONY: help install dev-install clean lint format test test-cov pre-commit update
+.PHONY: help install dev-install clean lint format test test-cov test-macos pre-commit update
 
 # Display help information
 help:
@@ -27,6 +27,7 @@ help:
 	@echo "  format           Format code (black, isort)"
 	@echo "  test             Run tests"
 	@echo "  test-cov         Run tests with coverage"
+	@echo "  test-macos       Run tests compatible with macOS (skips Linux-specific tests)"
 	@echo "  pre-commit       Run pre-commit checks on all files"
 	@echo "  update           Update dependencies"
 
@@ -66,6 +67,10 @@ test:
 # Run tests with coverage
 test-cov:
 	poetry run pytest --cov=unifi_ml2_driver --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+
+# Run tests compatible with macOS (skips Linux-specific tests)
+test-macos:
+	poetry run pytest unifi_ml2_driver/tests/unit/test_exceptions.py -v
 
 # Run pre-commit checks
 pre-commit:
