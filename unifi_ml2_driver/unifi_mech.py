@@ -104,6 +104,15 @@ unifi_opts = [
     cfg.IntOpt('monitor_interval',
                 default=60,
                 help='Interval in seconds to monitor port state'),
+    cfg.BoolOpt('dns_integration_enabled',
+                default=False, 
+                help='Enable DNS integration with UniFi controller'),
+    cfg.StrOpt('dns_domain',
+                help='Base DNS domain for port DNS entries'),
+    cfg.StrOpt('dns_domain_format',
+                default='{dns_name}.{dns_domain}',
+                help='Format string for DNS domain names. Available variables: '
+                    '{port_id}, {network_id}, {dns_name}, {dns_domain}'),
 ]
 
 CONF.register_opts(unifi_opts, "unifi")
@@ -124,6 +133,7 @@ class UnifiMechDriver(api.MechanismDriver):
                             portbindings.CONNECTIVITY_L2}
         self.trunk_driver = None
         self._controllers = {}
+        self.dns_handler = UnifiDnsHandler(self)
 
     @property
     def connectivity(self):
@@ -562,6 +572,10 @@ class UnifiMechDriver(api.MechanismDriver):
         network = context.network.current
         segments = context.segments_to_bind
         
+        # DNS records can be created regardless of physical port binding
+        if dns_apidef.DNSNAME in port and port.get(dns_apidef.DNSNAME):
+            self.dns_handler.create_port_dns_records(context._plugin_context, port, network)
+        
         # Skip ports that don't have binding:profile
         if not port.get('binding:profile'):
             return
@@ -643,7 +657,13 @@ class UnifiMechDriver(api.MechanismDriver):
         port = context.current
         original_port = context.original
         network = context.network.current
-        
+    
+        # Check if DNS name has changed
+        if (dns_apidef.DNSNAME in port and port.get(dns_apidef.DNSNAME)) or \
+        (dns_apidef.DNSNAME in original_port and original_port.get(dns_apidef.DNSNAME)):
+            self.dns_handler.update_port_dns_records(
+                context._plugin_context, port, network, original_port)
+
         # Skip ports that don't have binding:profile
         if not port.get('binding:profile'):
             return
@@ -729,7 +749,12 @@ class UnifiMechDriver(api.MechanismDriver):
         """
         port = context.current
         port_id = port['id']
-        
+        network = context.network.current
+
+        if dns_apidef.DNSNAME in port and port.get(dns_apidef.DNSNAME):
+            self.dns_handler.delete_port_dns_records(
+                context._plugin_context, port, network)
+
         # Check if we have a mapping for this port
         mapping = self.port_mappings.get(port_id)
         if not mapping:

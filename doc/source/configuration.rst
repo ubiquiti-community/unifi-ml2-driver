@@ -36,6 +36,43 @@ on switches. If not set, all ports or VLANS are allowed.
     or ngs_mac_address. So, you can use the switch MAC address to identify
     switches if local_link_connection/switch_info is not set.
 
+DNS Support
+===========
+
+The driver supports DNS resolution for the switch IP address. This is useful
+when the switch IP address is not static and is resolved by a DNS server.
+
+To enable the DNS integration feature in the UniFi ML2 Driver, add these configuration options to your Neutron configuration file:
+
+    [unifi]
+    # Enable DNS integration
+    dns_integration_enabled = True
+
+    # Base DNS domain for ports
+    dns_domain = example.com
+
+    # Optional: Format for DNS names
+    # dns_domain_format = {dns_name}.{dns_domain}
+
+    Once configured, set the dns_name attribute on Neutron ports to have DNS records automatically created. For example:
+
+    openstack port create --network my-network --dns-name myserver server-port
+
+This will create a DNS record with the name specified (e.g., myserver.example.com) pointing to the port's IP address.
+
+Implementation Notes
+This implementation:
+
+Respects the existing UniFi ML2 Driver architecture and code patterns
+Gracefully handles error cases
+Uses async operations with the aiounifi library
+Logs all operations for traceability
+Only creates records when DNS names are specified
+Supports both IPv4 (A records) and IPv6 (AAAA records)
+The code is ready to be integrated into the UniFi ML2 Driver to provide DNS functionality alongside the existing networking features.
+
+
+
 Examples
 ========
 
