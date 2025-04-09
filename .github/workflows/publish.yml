@@ -17,5 +17,7 @@ jobs:
         python-version: '3.13'
         cache: 'poetry'
     - run: poetry install
+    - name: Build package
+      run: poetry build
     - name: Publish to PyPI
       run: poetry publish
