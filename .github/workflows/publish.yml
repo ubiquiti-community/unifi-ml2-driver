@@ -23,44 +23,47 @@ jobs:
     - name: build release distributions
       run: |-
         poetry install
+        poetry build --format=wheel
         poetry build --format=sdist
+      # poetry build --format=sdist
 
     - name: upload dists
       uses: actions/upload-artifact@v4
       with:
         name: cibw-sdist
-        path: dist/*.tar.gz
+        path: dist/
+        # path: dist/*.tar.gz
 
-  build-wheels:
-    name: Build wheels for ${{ matrix.os }}
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      matrix:
-        os: [linux-intel, linux-arm, macOS-arm]
-        include:
-        - archs: auto
-          platform: auto
-        - os: linux-intel
-          runs-on: ubuntu-latest
-        - os: linux-arm
-          runs-on: ubuntu-24.04-arm
-        - os: macos-arm
-          runs-on: macos-latest
-          archs: auto,universal2
+        # build-wheels:
+        #   name: Build wheels for ${{ matrix.os }}
+        #   runs-on: ${{ matrix.runs-on }}
+        #   strategy:
+        #     matrix:
+        #       os: [linux-intel, linux-arm, macOS-arm]
+        #       include:
+        #       - archs: auto
+        #         platform: auto
+        #       - os: linux-intel
+        #         runs-on: ubuntu-latest
+        #       - os: linux-arm
+        #         runs-on: ubuntu-24.04-arm
+        #       - os: macos-arm
+        #         runs-on: macos-latest
+        #         archs: auto,universal2
 
-    steps:
-    - uses: actions/checkout@v4
+        #   steps:
+        #   - uses: actions/checkout@v4
 
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23.2
-      env:
-        CIBW_PLATFORM: ${{ matrix.platform }}
-        CIBW_ARCHS: ${{ matrix.archs }}
+        #   - name: Build wheels
+        #     uses: pypa/cibuildwheel@v2.23.2
+        #     env:
+        #       CIBW_PLATFORM: ${{ matrix.platform }}
+        #       CIBW_ARCHS: ${{ matrix.archs }}
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-        path: ./wheelhouse/*.whl
+        #   - uses: actions/upload-artifact@v4
+        #     with:
+        #       name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+        #       path: ./wheelhouse/*.whl
 
   pypi-publish:
     runs-on: ubuntu-latest
@@ -71,7 +74,7 @@ jobs:
 
     needs:
     - build-sdist
-    - build-wheels
+    # - build-wheels
 
     permissions:
       id-token: write
