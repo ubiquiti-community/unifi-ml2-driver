@@ -1,10 +1,11 @@
 [project]
 name = "unifi-ml2-driver"
-version = "0.1.0"
+dynamic = [ "version" ]
+urls = { repository = "https://github.com/ubiquiti-community/unifi-ml2-driver", documentation = "https://github.com/ubiquiti-community/unifi-ml2-driver/tree/main/doc/source" }
 description = "Unifi Modular Layer 2 (ML2) driver."
 authors = [{ name = "appkins", email = "info@appkins.io" }]
 license-files = ["LICENSE"]
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.12.0"
 dependencies = [
     "aiounifi (>=83)",
@@ -26,6 +27,7 @@ dependencies = [
 unifi = "unifi_ml2_driver.unifi_mech:UnifiMechDriver"
 
 [tool.poetry]
+version = "1.0"
 packages = [{ include = "unifi_ml2_driver" }]
 scripts = { unifi-ml2-driver = "unifi_ml2_driver.cli:main" }
 dependencies = { python = ">=3.12.0,<4.0" }

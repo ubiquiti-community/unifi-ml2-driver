@@ -35,6 +35,10 @@ jobs:
         name: release-dists
         path: dist/
   pypi-publish:
+    environment:
+      name: pypi
+      url: https://pypi.org/p/unifi-ml2-driver
+
     concurrency:
       group: pypi-publish
       cancel-in-progress: false
