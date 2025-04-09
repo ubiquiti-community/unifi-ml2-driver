@@ -27,7 +27,7 @@ jobs:
     - name: build release distributions
       run: |-
         poetry install
-        poetry build
+        poetry build --config-settings local-version=1.0.0
 
     - name: upload dists
       uses: actions/upload-artifact@v4
@@ -35,11 +35,11 @@ jobs:
         name: release-dists
         path: dist/
   pypi-publish:
+    runs-on: ubuntu-latest
+
     concurrency:
       group: pypi-publish
       cancel-in-progress: false
-
-    runs-on: ubuntu-latest
 
     needs:
     - release-build
