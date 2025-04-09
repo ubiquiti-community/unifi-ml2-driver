@@ -58,7 +58,7 @@ in a separate configuration file. Create or edit ``/etc/neutron/plugins/ml2/ml2_
 .. code-block:: ini
 
    [unifi]
-   controller = https://<controller-ip>
+   host = https://<controller-ip>
    username = <admin-username>
    password = <admin-password>
    site = default

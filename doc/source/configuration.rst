@@ -83,7 +83,7 @@ they could also be added directly to ``/etc/neutron/plugins/ml2/ml2_conf.ini``.
 Here is an example for the Unifi Dream Machine::
 
     [unifi]
-    controller = <udm address>
+    host = <udm address>
     username = <username>
     password = <password>
     site = <site>
@@ -359,7 +359,7 @@ UniFi Controller Configuration
 The UniFi ML2 driver connects to a UniFi Network controller to manage UniFi switches. The following configuration options should be added to ``/etc/neutron/plugins/ml2/ml2_conf.ini`` or a separate file like ``/etc/neutron/plugins/ml2/ml2_conf_unifi.ini``::
 
     [unifi]
-    controller = https://<controller-ip>
+    host = https://<controller-ip>
     username = <admin-username>
     password = <admin-password>
     site = default
@@ -399,12 +399,12 @@ The UniFi ML2 driver connects to a UniFi Network controller to manage UniFi swit
 
 Required Parameters:
 
-* ``controller``: URL of the UniFi Network controller (e.g., https://unifi.example.com:8443)
 * ``username``: Username for UniFi controller authentication
 * ``password``: Password for UniFi controller authentication
 
 Optional Parameters:
 
+* ``host``: URL of the UniFi Network controller (e.g., 10.0.0.1)
 * ``site``: UniFi site name to manage (defaults to "default")
 * ``verify_ssl``: Whether to verify SSL certificates (default: True)
 * ``port_name_format``: Format string for port names on switches (default: openstack-port-{port_id})
@@ -467,7 +467,7 @@ Here's a complete example configuration for the UniFi ML2 driver::
     network_vlan_ranges = physnet1:100:200,physnet2:300:400
     
     [unifi]
-    controller = https://unifi.example.com:8443
+    host = 10.0.0.1
     username = admin
     password = verysecurepassword
     site = default

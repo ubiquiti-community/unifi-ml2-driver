@@ -27,7 +27,7 @@ dependencies = [
 unifi = "unifi_ml2_driver.unifi_mech:UnifiMechDriver"
 
 [tool.poetry]
-version = "1.0.4"
+version = "1.0.5"
 packages = [{ include = "unifi_ml2_driver" }]
 # scripts = { unifi-ml2-driver = "unifi_ml2_driver.cli:main" }
 dependencies = { python = ">=3.10.12,<4.0" }
