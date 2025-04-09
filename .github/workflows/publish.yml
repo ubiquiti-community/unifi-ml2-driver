@@ -27,7 +27,7 @@ jobs:
     - name: build release distributions
       run: |-
         poetry install
-        poetry build --config-settings local-version=1.0.0
+        poetry build --format=sdist
 
     - name: upload dists
       uses: actions/upload-artifact@v4
