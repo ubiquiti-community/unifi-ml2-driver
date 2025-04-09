@@ -40,7 +40,7 @@ class TestUnifiApi(unittest.TestCase):
         
         # Configure settings
         cfg.CONF.unifi = mock.MagicMock()
-        cfg.CONF.unifi.controller = "https://unifi.example.com"
+        cfg.CONF.unifi.host = "https://unifi.example.com"
         cfg.CONF.unifi.username = "admin"
         cfg.CONF.unifi.password = "password"
         cfg.CONF.unifi.verify_ssl = False

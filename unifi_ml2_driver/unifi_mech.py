@@ -79,7 +79,7 @@ class UnifiMechDriver(api.MechanismDriver):
         self.trunk_driver = trunk_driver.UnifiTrunkDriver.create(self)
 
         # Verify we have required configuration
-        if not CONF.unifi.controller:
+        if not CONF.unifi.host:
             LOG.warning("UniFi controller URL not configured. Driver disabled.")
             return
 
@@ -91,7 +91,7 @@ class UnifiMechDriver(api.MechanismDriver):
         try:
             with self._get_controller() as controller:
                 LOG.info("Successfully connected to UniFi controller at %s",
-                         CONF.unifi.controller)
+                         CONF.unifi.host)
                 
                 # Sync networks if needed
                 if CONF.unifi.sync_startup:
@@ -108,9 +108,9 @@ class UnifiMechDriver(api.MechanismDriver):
         """
         if CONF.unifi.controller not in self._controllers:
             # Empty dict for config since we're using CONF directly in get_unifi_api
-            self._controllers[CONF.unifi.controller] = {}
+            self._controllers[CONF.unifi.host] = {}
         
-        return self._get_api(CONF.unifi.controller)
+        return self._get_api(CONF.unifi.host)
 
     @contextmanager
     def _get_api(self, controller_id):

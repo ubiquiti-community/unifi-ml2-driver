@@ -40,11 +40,11 @@ async def get_unifi_api(
     api = aiounifi.Controller(
         Configuration(
             session,
-            host=CONF.unifi.controller,
+            host=CONF.unifi.host,
             username=CONF.unifi.username,
             password=CONF.unifi.password,
-            # port=8443,
-            # site=CONF.unifi.site_id,
+            port=CONF.unifi.port,
+            site=CONF.unifi.site,
             ssl_context=ssl_context,
         )
     )
@@ -56,7 +56,7 @@ async def get_unifi_api(
     except aiounifi.Unauthorized as err:
         LOG.warning(
             "Connected to UniFi Network at %s but not registered: %s",
-            CONF.unifi.controller,
+            CONF.unifi.host,
             err,
         )
         raise AuthenticationRequired(reason=str(err)) from err
@@ -70,14 +70,14 @@ async def get_unifi_api(
         aiounifi.ResponseError,
     ) as err:
         LOG.error(
-            "Error connecting to the UniFi Network at %s: %s", CONF.unifi.controller, err
+            "Error connecting to the UniFi Network at %s: %s", CONF.unifi.host, err
         )
         raise CannotConnect(reason=str(err)) from err
 
     except aiounifi.LoginRequired as err:
         LOG.warning(
             "Connected to UniFi Network at %s but login required: %s",
-            CONF.unifi.controller,
+            CONF.unifi.host,
             err,
         )
         raise AuthenticationRequired(reason=str(err)) from err

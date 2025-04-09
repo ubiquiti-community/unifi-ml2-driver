@@ -20,8 +20,12 @@ LOG = logging.getLogger(__name__)
 
 unifi_opts = [
     # Controller connection settings
-    cfg.StrOpt('controller',
-               help='URL of the UniFi Network controller'),
+    cfg.StrOpt('host',
+                default='10.0.0.1',
+                help='Host of the UniFi Network controller'),
+    cfg.IntOpt('port',
+                default=8443,
+                help='Port of the UniFi Network controller'),
     cfg.StrOpt('username',
                help='Username for UniFi controller authentication'),
     cfg.StrOpt('password',
@@ -127,26 +131,3 @@ ngs_opts = [
 CONF.register_opts(unifi_opts, group="unifi")
 CONF.register_opts(coordination_opts, group='ngs_coordination')
 CONF.register_opts(ngs_opts, group='ngs')
-
-
-def get_devices():
-    """Parse supplied config files and fetch defined supported devices."""
-
-    device_tag = 'unifi:'
-    devices = {}
-
-    for filename in CONF.config_file:
-        sections: dict = {}
-        parser = cfg.ConfigParser(filename, sections)
-        try:
-            parser.parse()
-        except IOError:
-            continue
-        for parsed_item, parsed_value in sections.items():
-            if parsed_item.startswith(device_tag):
-                dev_id = parsed_item.partition(device_tag)[2]
-                device_cfg = {k: v[0] for k, v
-                              in parsed_value.items()}
-                devices[dev_id] = device_cfg
-
-    return devices
