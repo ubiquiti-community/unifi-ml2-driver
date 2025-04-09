@@ -88,4 +88,4 @@ jobs:
         merge-multiple: true
 
     - name: Publish release distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1
+      uses: pypa/gh-action-pypi-publish@v1.12.4
