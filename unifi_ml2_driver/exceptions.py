@@ -23,6 +23,14 @@ class UnifiException(exceptions.NeutronException):
     """Base UniFi Exception."""
     message = _("UniFi failure: %(reason)s")
 
+    def __init__(self, msg=None, **kwargs):
+        if msg is None:
+            # Ensure kwargs has 'reason' if not provided
+            if 'reason' not in kwargs and 'error' in kwargs:
+                kwargs['reason'] = kwargs['error']
+            msg = self.message % kwargs
+        super(UnifiException, self).__init__(msg=msg)
+
 
 class CannotConnect(UnifiException):
     """Raised when connection to UniFi controller fails."""
@@ -67,3 +75,12 @@ class UnifiPortSecurityConfigError(UnifiException):
 class UnifiTrunkConfigError(UnifiException):
     """Raised when trunk port configuration fails."""
     message = _("Failed to configure trunk port: %(reason)s")
+
+
+class UnifiBatchError(UnifiException):
+    """Raised when a batch operation fails."""
+    message = _("Batch operation failed on device %(device)s: %(error)s")
+    
+    def __init__(self, device=None, error=None):
+        kwargs = {'device': device, 'error': error}
+        super(UnifiBatchError, self).__init__(msg=None, **kwargs)

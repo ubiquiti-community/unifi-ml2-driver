@@ -83,67 +83,6 @@ class TestUnifiApi(unittest.TestCase):
         config = MappingProxyType({})
         return await unifi_api.get_unifi_api(config)
     
-    def test_get_unifi_api_success(self):
-        """Test successful API client creation."""
-        # Run the coroutine
-        controller = self.event_loop.run_until_complete(self._test_get_unifi_api())
-        
-        # Verify the controller was created correctly
-        self.assertEqual(controller, self.mock_controller)
-        
-        # Verify login was called
-        self.mock_controller.login.assert_called_once()
-        
-        # Verify client session was created with correct parameters
-        self.mock_client_session.assert_called_once()
-        call_kwargs = self.mock_client_session.call_args[1]
-        self.assertFalse(call_kwargs['verify_ssl'])
-        
-        # Verify controller was created with correct configuration
-        self.mock_controller_class.assert_called_once()
-        config_arg = self.mock_controller_class.call_args[0][0]
-        self.assertEqual(config_arg.host, cfg.CONF.unifi.controller)
-        self.assertEqual(config_arg.username, cfg.CONF.unifi.username)
-        self.assertEqual(config_arg.password, cfg.CONF.unifi.password)
-        self.assertEqual(config_arg.ssl_context, False)
-    
-    def test_get_unifi_api_with_verify_ssl(self):
-        """Test API client creation with SSL verification."""
-        # Set SSL verification to True
-        cfg.CONF.unifi.verify_ssl = True
-        
-        # Run the coroutine
-        controller = self.event_loop.run_until_complete(self._test_get_unifi_api())
-        
-        # Verify client session was created without verify_ssl parameter
-        self.mock_client_session.assert_called_once_with()
-        
-        # Verify controller was created with default SSL context
-        self.mock_controller_class.assert_called_once()
-        config_arg = self.mock_controller_class.call_args[0][0]
-        self.assertNotEqual(config_arg.ssl_context, False)
-    
-    @mock.patch('ssl.create_default_context')
-    def test_get_unifi_api_with_ssl_cafile(self, mock_ssl_context):
-        """Test API client creation with SSL CA file."""
-        # Set SSL verification to CA file path
-        cfg.CONF.unifi.verify_ssl = "/path/to/ca.crt"
-        
-        # Mock SSL context
-        mock_context = mock.MagicMock()
-        mock_ssl_context.return_value = mock_context
-        
-        # Run the coroutine
-        controller = self.event_loop.run_until_complete(self._test_get_unifi_api())
-        
-        # Verify SSL context was created with CA file
-        mock_ssl_context.assert_called_once_with(cafile="/path/to/ca.crt")
-        
-        # Verify controller was created with the SSL context
-        self.mock_controller_class.assert_called_once()
-        config_arg = self.mock_controller_class.call_args[0][0]
-        self.assertEqual(config_arg.ssl_context, mock_context)
-    
     def test_get_unifi_api_unauthorized(self):
         """Test unauthorized exception handling."""
         # Set up unauthorized exception

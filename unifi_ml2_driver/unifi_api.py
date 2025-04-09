@@ -25,14 +25,15 @@ async def get_unifi_api(
 ) -> aiounifi.Controller:
     """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
-
-    if verify_ssl := CONF.unifi.verify_ssl:
-        session = ClientSession()
-        if isinstance(verify_ssl, str):
-            ssl_context = ssl.create_default_context(cafile=verify_ssl)
+    if CONF.unifi.verify_ssl:
+        ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.CLIENT_AUTH,
+        )
+        session = ClientSession(
+            cookie_jar=CookieJar(unsafe=False),
+        )
     else:
         session = ClientSession(
-            verify_ssl=False,
             cookie_jar=CookieJar(unsafe=True)
             )
 
@@ -58,7 +59,7 @@ async def get_unifi_api(
             CONF.unifi.controller,
             err,
         )
-        raise AuthenticationRequired from err
+        raise AuthenticationRequired(reason=str(err)) from err
 
     except (
         TimeoutError,
@@ -71,7 +72,7 @@ async def get_unifi_api(
         LOG.error(
             "Error connecting to the UniFi Network at %s: %s", CONF.unifi.controller, err
         )
-        raise CannotConnect from err
+        raise CannotConnect(reason=str(err)) from err
 
     except aiounifi.LoginRequired as err:
         LOG.warning(
@@ -79,10 +80,10 @@ async def get_unifi_api(
             CONF.unifi.controller,
             err,
         )
-        raise AuthenticationRequired from err
+        raise AuthenticationRequired(reason=str(err)) from err
 
     except aiounifi.AiounifiException as err:
         LOG.exception("Unknown UniFi Network communication error occurred: %s", err)
-        raise AuthenticationRequired from err
+        raise AuthenticationRequired(reason=str(err)) from err
 
     return api
