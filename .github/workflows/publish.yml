@@ -3,21 +3,56 @@ name: PyPI Publish
 on: [push]
 
 jobs:
-  build-linux:
+  release-build:
     runs-on: ubuntu-latest
+
+    concurrency:
+      group: release-build
+      cancel-in-progress: true
+
     permissions:
       id-token: write
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Install poetry
       run: pipx install poetry
+
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: "3.x"
         cache: 'poetry'
-    - run: poetry install
-    - name: Build package
-      run: poetry build
-    - name: Publish to PyPI
-      run: poetry publish
+
+    - name: build release distributions
+      run: |-
+        poetry install --no-dev
+        poetry build
+
+    - name: upload dists
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-dists
+        path: dist/
+  pypi-publish:
+    concurrency:
+      group: pypi-publish
+      cancel-in-progress: false
+
+    runs-on: ubuntu-latest
+
+    needs:
+    - release-build
+
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Retrieve release distributions
+      uses: actions/download-artifact@v4
+      with:
+        name: release-dists
+        path: dist/
+
+    - name: Publish release distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f
