@@ -136,7 +136,7 @@ def get_devices():
     devices = {}
 
     for filename in CONF.config_file:
-        sections = {}
+        sections: dict = {}
         parser = cfg.ConfigParser(filename, sections)
         try:
             parser.parse()

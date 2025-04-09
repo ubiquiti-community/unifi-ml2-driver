@@ -24,7 +24,7 @@ jobs:
       run: |-
         poetry install
         poetry build --format=wheel
-        poetry build --format=sdist
+        poetry build --format=sdist --
       # poetry build --format=sdist
 
     - name: upload dists

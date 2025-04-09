@@ -117,6 +117,28 @@ yarl = ">=1.17.0,<2.0"
 speedups = ["Brotli ; platform_python_implementation == \"CPython\"", "aiodns (>=3.2.0) ; sys_platform == \"linux\" or sys_platform == \"darwin\"", "brotlicffi ; platform_python_implementation != \"CPython\""]
 
 [[package]]
+name = "aiohttp-unifi"
+version = "84"
+description = "Python library for communicating with UniFi Network Controller API"
+optional = false
+python-versions = "<4.0,>=3.10.12"
+groups = ["main"]
+files = [
+    {file = "aiohttp_unifi-84-py3-none-any.whl", hash = "sha256:9164fd07cb5e2c6ca30954911991a4ff65923eb66ac02156a7baf48a0e0d3693"},
+    {file = "aiohttp_unifi-84.tar.gz", hash = "sha256:b956db565e1e69bc1f69e31fa8ddde0191f4fdd7feb44b16e7e17b9b1edc5a33"},
+]
+
+[package.dependencies]
+aiohttp = ">3.9"
+orjson = ">3.9"
+segno = ">=1.5.2"
+
+[package.extras]
+requirements = ["aiohttp (==3.11.16)", "orjson (==3.10.16)", "segno (==1.6.6)"]
+requirements-dev = ["pre-commit (==4.2.0)"]
+requirements-test = ["aioresponses (==0.7.8)", "mypy (==1.15.0)", "pytest (==8.3.5)", "pytest-aiohttp (==1.1.0)", "pytest-asyncio (==0.26.0)", "pytest-cov (==6.1.1)", "ruff (==0.11.4)", "trustme (==1.2.1)", "types-orjson (==3.6.2)"]
+
+[[package]]
 name = "aiosignal"
 version = "1.3.2"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -130,24 +152,6 @@ files = [
 
 [package.dependencies]
 frozenlist = ">=1.1.0"
-
-[[package]]
-name = "aiounifi"
-version = "55"
-description = "An asynchronous Python library for communicating with UniFi Network Controller API"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "aiounifi-55-py3-none-any.whl", hash = "sha256:bdc0ca978a9c649f6bc2170daf47a33f9e54393d7b198b96e01d15039bf62958"},
-    {file = "aiounifi-55.tar.gz", hash = "sha256:9f93e6be2c1fb07e77c08f91cb6c006ef794c0b16857750b1a643c4d2b2d96b2"},
-]
-
-[package.dependencies]
-aiohttp = "*"
-async-timeout = "*"
-orjson = "*"
-segno = "*"
 
 [[package]]
 name = "alabaster"
@@ -203,6 +207,7 @@ description = "Timeout context manager for asyncio programs"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "python_version < \"3.11\""
 files = [
     {file = "async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c"},
     {file = "async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3"},
@@ -5347,4 +5352,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.12,<4.0"
-content-hash = "c9a0c046726eec5b8272ca571537e77315fe99818fb3e528a44b33d131e7fa3b"
+content-hash = "617dc627a5bd474bbe3630b0717f541492ca2f236066d0eaad92d695533deec5"

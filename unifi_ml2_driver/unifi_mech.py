@@ -994,31 +994,3 @@ class UnifiMechDriver(api.MechanismDriver):
                 return True
                 
         return False
-
-    def _is_switch_supported(self, switch_id):
-        """Check if a switch is supported by this driver.
-        
-        Args:
-            switch_id: The MAC address of the switch
-            
-        Returns:
-            True if the switch is supported
-        """
-        # Try to find this switch in the UniFi controller
-        try:
-            with self._get_controller() as controller:
-                loop = asyncio.get_event_loop()
-                
-                # Fetch devices and look for this switch
-                devices = loop.run_until_complete(controller.devices.update())
-                for device in devices:
-                    if hasattr(device, 'mac') and device.mac == switch_id:
-                        if hasattr(device, 'type') and device.type == 'usw':
-                            # Found a UniFi switch with this ID
-                            return True
-                            
-                return False
-                
-        except Exception as e:
-            LOG.error("Failed to check if switch %s is supported: %s", switch_id, e)
-            return False
