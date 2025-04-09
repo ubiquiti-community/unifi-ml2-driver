@@ -1,0 +1,12 @@
+[unifi]
+controller = 10.0.0.1
+username = admin
+password = password
+site = default
+verify_ssl = false
+
+# Enable DNS integration
+dns_integration_enabled = True
+
+# Base DNS domain for ports
+dns_domain = example.com

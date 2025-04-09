@@ -19,26 +19,92 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 unifi_opts = [
+    # Controller connection settings
     cfg.StrOpt('controller',
-                help='IP address of UniFi controller'),
+               help='URL of the UniFi Network controller'),
     cfg.StrOpt('username',
-                help='Username for UniFi controller'),
+               help='Username for UniFi controller authentication'),
     cfg.StrOpt('password',
-                help='Password for UniFi controller',
-                secret=True),
-    cfg.StrOpt('site_id',
-                help='Site ID for UniFi controller'),
-    cfg.StrOpt('version',
-                help='UniFi controller version'),
+               secret=True,
+               help='Password for UniFi controller authentication'),
+    cfg.StrOpt('site',
+               default='default',
+               help='UniFi site name to manage'),
     cfg.BoolOpt('verify_ssl',
                 default=True,
-                help='Verify SSL certificate'),
+                help='Verify SSL certificates for UniFi controller connection'),
     cfg.StrOpt('cafile',
-                help='CA certificate file'),
-    cfg.StrOpt('certfile',
-                help='Certificate file'),
-    cfg.StrOpt('keyfile',
-                help='Key file')
+                help='CA certificate file for SSL verification'),
+
+    # Port configuration
+    cfg.StrOpt('port_name_format',
+               default='openstack-port-{port_id}',
+               help='Format string for port names. Available variables: '
+                    '{port_id}, {network_id}, {segmentation_id}'),
+    cfg.StrOpt('port_description_format',
+               default='OpenStack port {port_id}',
+               help='Format string for port descriptions'),
+    
+    # Operation retry settings
+    cfg.IntOpt('api_retry_count',
+               default=3,
+               help='Number of times to retry API calls'),
+    cfg.IntOpt('port_setup_retry_count',
+               default=3,
+               help='Number of times to retry port setup operations'),
+    cfg.IntOpt('port_setup_retry_interval',
+               default=1,
+               help='Interval between port setup retries in seconds'),
+
+    # Feature flags
+    cfg.BoolOpt('sync_startup',
+                default=True,
+                help='Sync networks and ports on startup'),
+    cfg.BoolOpt('use_all_networks_for_trunk',
+                default=True,
+                help='Use "All Networks" option for trunk ports'),
+    cfg.BoolOpt('enable_port_security',
+                default=True,
+                help='Enable port security features like MAC address filtering'),
+    cfg.BoolOpt('enable_qos',
+                default=False,
+                help='Enable QoS features on ports'),
+    cfg.IntOpt('default_bandwidth_limit',
+                default=0,
+                help='Default bandwidth limit in Kbps (0 means unlimited)'),
+
+    # Storm control settings
+    cfg.BoolOpt('enable_storm_control',
+                default=False,
+                help='Enable storm control on ports'),
+    cfg.IntOpt('storm_control_broadcasting',
+                default=0,
+                help='Storm control threshold for broadcast traffic (0-100%)'),
+    cfg.IntOpt('storm_control_multicasting',
+                default=0,
+                help='Storm control threshold for multicast traffic (0-100%)'),
+    cfg.IntOpt('storm_control_unknown_unicast',
+                default=0,
+                help='Storm control threshold for unknown unicast traffic (0-100%)'),
+
+    # Monitoring settings
+    cfg.BoolOpt('monitor_port_state',
+                default=True,
+                help='Monitor port state and update OpenStack port status'),
+    cfg.IntOpt('monitor_interval',
+                default=60,
+                help='Interval in seconds to monitor port state'),
+
+    # DNS integration
+    cfg.BoolOpt('dns_integration_enabled',
+                default=False,
+                help='Enable DNS integration with UniFi controller'),
+    cfg.StrOpt('dns_domain',
+                help='Base DNS domain for port DNS entries'),
+    cfg.StrOpt('dns_domain_format',
+                default='{dns_name}.{dns_domain}',
+                help='Format string for DNS domain names. Available variables: '
+                     '{port_id}, {network_id}, {dns_name}, {dns_domain}')
 ]
 
 coordination_opts = [
