@@ -38,15 +38,13 @@ async def get_unifi_api(
             )
 
     api = aiounifi.Controller(
-        Configuration(
-            session,
-            host=CONF.unifi.controller,
-            username=CONF.unifi.username,
-            password=CONF.unifi.password,
-            # port=8443,
-            # site=CONF.unifi.site_id,
-            ssl_context=ssl_context,
-        )
+        websession=session,
+        host=CONF.unifi.controller,
+        username=CONF.unifi.username,
+        password=CONF.unifi.password,
+        # port=8443,
+        # site=CONF.unifi.site_id,
+        ssl_context=ssl_context,
     )
 
     try:
