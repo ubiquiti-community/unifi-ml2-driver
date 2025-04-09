@@ -6,7 +6,7 @@ description = "Unifi Modular Layer 2 (ML2) driver."
 authors = [{ name = "appkins", email = "info@appkins.io" }]
 license-files = ["LICENSE"]
 readme = "README.md"
-requires-python = ">=3.10.0"
+requires-python = ">=3.10.12"
 dependencies = [
     "aiounifi",
     "etcd3gw (>=2.1.0)",
@@ -27,22 +27,21 @@ dependencies = [
 unifi = "unifi_ml2_driver.unifi_mech:UnifiMechDriver"
 
 [tool.poetry]
-version = "1.0.1"
+version = "1.0.2"
 packages = [{ include = "unifi_ml2_driver" }]
-scripts = { unifi-ml2-driver = "unifi_ml2_driver.cli:main" }
-dependencies = { python = ">=3.10.0,<4.0" }
+# scripts = { unifi-ml2-driver = "unifi_ml2_driver.cli:main" }
+dependencies = { python = ">=3.10.12,<4.0" }
 
 [tool.poetry.group.dev.dependencies]
 # Test tools
 pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
 pytest-xdist = "^3.3.1"
-pytest-mock = "^3.10.0"
+pytest-mock = "^3.10.12"
 coverage = "^7.3.0"
 fixtures = ">=3.0.0"
 futurist = ">=1.2.0"
 stestr = ">=2.0.0"
-sphinx = ">=7.2.5"
 
 # Linting tools
 flake8 = "^6.0.0"
@@ -54,7 +53,7 @@ mypy = "^1.5.1"
 black = "^23.9.1"
 isort = "^5.12.0"
 pre-commit = "^3.5.0"
-reorder-python-imports = ">=3.10.0"
+reorder-python-imports = ">=3.10.12"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -142,3 +141,9 @@ exclude_lines = [
     "pass",
     "raise ImportError",
 ]
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+Sphinx = "^5.1.1"
