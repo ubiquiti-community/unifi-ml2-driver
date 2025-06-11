@@ -8,7 +8,8 @@ from types import MappingProxyType
 from typing import Any, Literal
 
 from aiohttp import CookieJar, ClientSession
-import aiounifi
+from aiounifi import Unauthorized, BadGateway, Forbidden, ServiceUnavailable, RequestError, ResponseError, LoginRequired, AiounifiException
+from aiounifi.controller import Controller
 from aiounifi.models.configuration import Configuration
 
 from .exceptions import AuthenticationRequired, CannotConnect
@@ -22,7 +23,7 @@ CONF = cfg.CONF
 
 async def get_unifi_api(
     config: MappingProxyType[str, Any],
-) -> aiounifi.Controller:
+) -> Controller:
     """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
     if CONF.unifi.verify_ssl:
@@ -37,7 +38,7 @@ async def get_unifi_api(
             cookie_jar=CookieJar(unsafe=True)
             )
 
-    api = aiounifi.Controller(
+    api = Controller(
         Configuration(
             session,
             host=CONF.unifi.host,
@@ -53,7 +54,7 @@ async def get_unifi_api(
         async with asyncio.timeout(10):
             await api.login()
 
-    except aiounifi.Unauthorized as err:
+    except Unauthorized as err:
         LOG.warning(
             "Connected to UniFi Network at %s but not registered: %s",
             CONF.unifi.host,
@@ -63,18 +64,18 @@ async def get_unifi_api(
 
     except (
         TimeoutError,
-        aiounifi.BadGateway,
-        aiounifi.Forbidden,
-        aiounifi.ServiceUnavailable,
-        aiounifi.RequestError,
-        aiounifi.ResponseError,
+        BadGateway,
+        Forbidden,
+        ServiceUnavailable,
+        RequestError,
+        ResponseError,
     ) as err:
         LOG.error(
             "Error connecting to the UniFi Network at %s: %s", CONF.unifi.host, err
         )
         raise CannotConnect(reason=str(err)) from err
 
-    except aiounifi.LoginRequired as err:
+    except LoginRequired as err:
         LOG.warning(
             "Connected to UniFi Network at %s but login required: %s",
             CONF.unifi.host,
@@ -82,7 +83,7 @@ async def get_unifi_api(
         )
         raise AuthenticationRequired(reason=str(err)) from err
 
-    except aiounifi.AiounifiException as err:
+    except AiounifiException as err:
         LOG.exception("Unknown UniFi Network communication error occurred: %s", err)
         raise AuthenticationRequired(reason=str(err)) from err
 

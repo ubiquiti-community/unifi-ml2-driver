@@ -37,13 +37,13 @@ from oslo_log import log as logging
 from unifi_ml2_driver import exceptions
 from unifi_ml2_driver.dns_handler import UnifiDnsHandler
 from unifi_ml2_driver.unifi_api import get_unifi_api
+from aiounifi.models.network import NetworkCreateRequest, NetworkDeleteRequest, Network, TypedNetwork
+from aiounifi.models.device import Device, DeviceListRequest, TypedDevicePortOverrides, DeviceSetPortProfileRequest
 from unifi_ml2_driver import trunk_driver
 
 LOG = logging.getLogger(__name__)
-CONF = cfg.CONF
 
 from unifi_ml2_driver.config import CONF
-
 
 class UnifiMechDriver(api.MechanismDriver):
     """UniFi Mechanism Driver for ML2 plugin.
@@ -63,7 +63,7 @@ class UnifiMechDriver(api.MechanismDriver):
         self.dns_handler = UnifiDnsHandler(self)
 
     @property
-    def connectivity(self):
+    def connectivity(self): # type: ignore
         return portbindings.CONNECTIVITY_L2
 
     def initialize(self):
@@ -186,22 +186,25 @@ class UnifiMechDriver(api.MechanismDriver):
                 loop = asyncio.get_event_loop()
                 
                 # Check if network exists
-                networks = loop.run_until_complete(controller.sites.networks.update())
+                loop.run_until_complete(controller.networks.update())
+                networks = controller.networks.items()
                 network_exists = any(
-                    net.vlan == segmentation_id for net in networks if hasattr(net, 'vlan')
+                    net.vlan == segmentation_id for k, net in networks if hasattr(net, 'vlan')
                 )
                 
                 if not network_exists:
                     # Create VLAN in UniFi controller
-                    vlan_data = {
+                    vlan_data = TypedNetwork({
+                        "_id": network_id,
+                        "site_id": "default", 
                         "name": f"OpenStack-{network_id}-VLAN{segmentation_id}",
                         "purpose": "corporate",
                         "vlan": segmentation_id,
                         "enabled": True
-                    }
+                    })
                     
                     loop.run_until_complete(
-                        controller.sites.networks.async_create_network(vlan_data)
+                        controller.request(NetworkCreateRequest.create(Network(vlan_data)))
                     )
                     
                     LOG.info('Network %s (VLAN %s) has been created in UniFi controller',
@@ -272,9 +275,9 @@ class UnifiMechDriver(api.MechanismDriver):
                 loop = asyncio.get_event_loop()
                 
                 # Find the network with the old VLAN ID
-                networks = loop.run_until_complete(controller.sites.networks.update())
+                networks = controller.networks.items()
                 old_network = next(
-                    (net for net in networks 
+                    (net for k, net in networks 
                      if hasattr(net, 'vlan') and net.vlan == old_segmentation_id), 
                     None
                 )
@@ -282,19 +285,21 @@ class UnifiMechDriver(api.MechanismDriver):
                 if old_network:
                     # Delete old network
                     loop.run_until_complete(
-                        controller.sites.networks.async_delete_network(old_network.id)
+                        controller.request(NetworkDeleteRequest.create(old_network.id))
                     )
                 
                 # Create new network with updated VLAN ID
-                vlan_data = {
+                vlan_data = TypedNetwork({
+                    "_id": network_id,
+                    "site_id": "default", 
                     "name": f"OpenStack-{network_id}-VLAN{new_segmentation_id}",
                     "purpose": "corporate",
                     "vlan": new_segmentation_id,
                     "enabled": True
-                }
+                })
                 
                 loop.run_until_complete(
-                    controller.sites.networks.async_create_network(vlan_data)
+                    controller.request(NetworkCreateRequest.create(Network(vlan_data)))
                 )
                 
                 LOG.info('Network %s updated from VLAN %s to VLAN %s in UniFi controller',
@@ -349,17 +354,20 @@ class UnifiMechDriver(api.MechanismDriver):
                 loop = asyncio.get_event_loop()
                 
                 # Find the network with this VLAN ID
-                networks = loop.run_until_complete(controller.sites.networks.update())
-                target_network = next(
-                    (net for net in networks 
-                     if hasattr(net, 'vlan') and net.vlan == segmentation_id), 
-                    None
-                )
+                loop.run_until_complete(controller.networks.update())
+                networks = controller.networks.items()
+                
+                target_network = None
+                for k, net in networks:
+                    if (hasattr(net, 'vlan') and 
+                        net.vlan == segmentation_id):
+                        target_network = net
+                        break
                 
                 if target_network:
                     # Delete network in UniFi controller
                     loop.run_until_complete(
-                        controller.sites.networks.async_delete_network(target_network.id)
+                        controller.request(NetworkDeleteRequest.create(target_network.id))
                     )
                     LOG.info('Network %s (VLAN %s) has been deleted from UniFi controller',
                              network_id, segmentation_id)
@@ -690,7 +698,7 @@ class UnifiMechDriver(api.MechanismDriver):
             LOG.error('Failed to unconfigure port %s on switch %s: %s',
                      mapping['port_id'], mapping['switch_id'], e)
 
-    def bind_port(self, context):
+    def bind_port(self, context) -> None:
         """Attempt to bind a port.
 
         :param context: PortContext instance describing the port
@@ -745,9 +753,6 @@ class UnifiMechDriver(api.MechanismDriver):
                 
                 LOG.debug("Bound port %s to segment %s on switch %s, port %s",
                          port['id'], segment[api.ID], switch_id, port_id_on_switch)
-                return True
-                
-        return False
                 
     def _is_switch_supported(self, switch_id):
         """Check if a switch is supported by this driver.
@@ -764,8 +769,9 @@ class UnifiMechDriver(api.MechanismDriver):
                 loop = asyncio.get_event_loop()
                 
                 # Fetch devices and look for this switch
-                devices = loop.run_until_complete(controller.devices.update())
-                for device in devices:
+                loop.run_until_complete(controller.devices.update())
+                devices = controller.devices.items()
+                for _, device in devices:
                     if hasattr(device, 'mac') and device.mac == switch_id:
                         if hasattr(device, 'type') and device.type == 'usw':
                             # Found a UniFi switch with this ID
@@ -796,9 +802,19 @@ class UnifiMechDriver(api.MechanismDriver):
             with self._get_controller() as controller:
                 loop = asyncio.get_event_loop()
                 
+                # Find the network with this VLAN ID
+                loop.run_until_complete(controller.networks.update())
+                network = next((net for _, net in controller.networks.items() if hasattr(net, 'vlan') and net.vlan == vlan_id), None)
+                if not network:
+                    raise exceptions.UnifiException(
+                        f"Network with VLAN {vlan_id} not found in UniFi controller")
+                network_id = network.id
+                LOG.debug("Found network %s with VLAN %s", network_id, vlan_id)
+                
                 # Find this switch
-                devices = loop.run_until_complete(controller.devices.update())
-                switch = next((d for d in devices if hasattr(d, 'mac') and d.mac == switch_id), None)
+                loop.run_until_complete(controller.devices.update())
+                devices = controller.devices.items()
+                switch = next((d for _, d in devices if hasattr(d, 'mac') and d.mac == switch_id), None)
                 
                 if not switch:
                     raise exceptions.CannotConnect(
@@ -810,30 +826,33 @@ class UnifiMechDriver(api.MechanismDriver):
                 except ValueError:
                     # Try to find port by name
                     port = next((p for p in switch.port_table 
-                               if hasattr(p, 'name') and p.name == port_id), None)
-                    if port:
-                        port_idx = port.port_idx
+                               if hasattr(p, 'name') and p["name"] == port_id), None)
+                    if port and hasattr(port, 'port_idx'):
+                        port_idx = port.get("port_idx")
                     else:
                         raise exceptions.UnifiException(
                             f"Port {port_id} not found on switch {switch_id}")
                 
-                # Set port configuration
-                port_conf = {
-                    "mac": switch_id,
-                    "port_idx": port_idx,
+                if port_idx is None:
+                    raise exceptions.UnifiException(
+                        f"Port {port_id} not found on switch {switch_id}")
+                    
+                port_conf = TypedDevicePortOverrides({
+                    "port_idx": int(port_idx),
                     "name": CONF.unifi.port_name_format.format(
                         port_id=neutron_port_id,
                         network_id=vlan_id,  # Using VLAN ID as network ID
                         segmentation_id=vlan_id
                     ),
-                    "port_vlan_enabled": True,
-                    "port_vlan": vlan_id
-                }
+                    # "port_vlan_enabled": True,
+                    "native_networkconf_id": network_id
+                })
                 
                 # Add QoS configuration if enabled
-                if CONF.unifi.enable_qos:
-                    port_conf["tx_rate_limit_enabled"] = True
-                    port_conf["tx_rate_limit_kbps_cfg"] = CONF.unifi.default_bandwidth_limit
+                # TODO: Create qos_profile and assign it via port profile
+                # if CONF.unifi.enable_qos:
+                #     port_conf["tx_rate_limit_enabled"] = True
+                #     port_conf["tx_rate_limit_kbps_cfg"] = CONF.unifi.default_bandwidth_limit
                     
                 # Add storm control if enabled
                 if CONF.unifi.enable_storm_control:
@@ -850,15 +869,18 @@ class UnifiMechDriver(api.MechanismDriver):
                 # Add port security if enabled
                 if CONF.unifi.enable_port_security:
                     port_conf["dot1x_ctrl"] = "force_authorized"
-                    port_conf["stp_port_fast"] = True
-                    port_conf["stp_bpdu_guard"] = True
-                    port_conf["stp_loop_guard"] = True
+                    port_conf["stp_port_mode"] = True
                 
                 # Send configuration to controller
                 for attempt in range(CONF.unifi.port_setup_retry_count):
                     try:
                         loop.run_until_complete(
-                            controller.devices.async_set_port_conf(port_conf)
+                            controller.request(
+                                DeviceSetPortProfileRequest.create(
+                                    device=switch,
+                                    port_override=port_conf,
+                                )
+                            )
                         )
                         LOG.info("Configured port %s on switch %s with VLAN %s",
                                 port_id, switch_id, vlan_id)
@@ -869,10 +891,10 @@ class UnifiMechDriver(api.MechanismDriver):
                             time.sleep(CONF.unifi.port_setup_retry_interval)
                         else:
                             raise
-                
+                    
         except Exception as e:
             LOG.error("Failed to configure port %s on switch %s: %s",
-                     port_id, switch_id, e)
+                    port_id, switch_id, e)
             raise exceptions.UnifiNetmikoConfigError()
 
     def _unconfigure_port(self, switch_id, port_id):
@@ -891,9 +913,24 @@ class UnifiMechDriver(api.MechanismDriver):
             with self._get_controller() as controller:
                 loop = asyncio.get_event_loop()
                 
+                # Set VLAN ID to Default (1)
+                vlan_id = 1  # Default VLAN ID
+                LOG.debug("Resetting port %s on switch %s to VLAN %s",
+                        port_id, switch_id, vlan_id)
+                
+                # Find the network with this VLAN ID
+                loop.run_until_complete(controller.networks.update())
+                network = next((net for _, net in controller.networks.items() if hasattr(net, 'vlan') and net.vlan == vlan_id), None)
+                if not network:
+                    raise exceptions.UnifiException(
+                        f"Network with VLAN {vlan_id} not found in UniFi controller")
+                network_id = network.id
+                LOG.debug("Found network %s with VLAN %s", network_id, vlan_id)
+                
                 # Find this switch
-                devices = loop.run_until_complete(controller.devices.update())
-                switch = next((d for d in devices if hasattr(d, 'mac') and d.mac == switch_id), None)
+                loop.run_until_complete(controller.devices.update())
+                devices = controller.devices.items()
+                switch = next((d for _, d in devices if hasattr(d, 'mac') and d.mac == switch_id), None)
                 
                 if not switch:
                     raise exceptions.CannotConnect(
@@ -905,30 +942,44 @@ class UnifiMechDriver(api.MechanismDriver):
                 except ValueError:
                     # Try to find port by name
                     port = next((p for p in switch.port_table 
-                               if hasattr(p, 'name') and p.name == port_id), None)
+                               if hasattr(p, 'name') and p.get("name") == port_id), None)
                     if port:
-                        port_idx = port.port_idx
+                        port_idx = port.get("port_idx")
                     else:
                         raise exceptions.UnifiException(
                             f"Port {port_id} not found on switch {switch_id}")
                 
-                # Reset port configuration
-                port_conf = {
-                    "mac": switch_id,
-                    "port_idx": port_idx,
+                if port_idx is None:
+                    raise exceptions.UnifiException(
+                        f"Port {port_id} not found on switch {switch_id}")
+
+                # Create port configuration to reset
+                port_conf = TypedDevicePortOverrides({
+                    "port_idx": int(port_idx),
                     "name": f"Port {port_idx}",  # Reset to default name
-                    "port_vlan_enabled": False,  # Disable VLAN
-                    "tagged_vlan": []  # Clear any tagged VLANs
-                }
+                    "native_networkconf_id": network_id # Reset to default network
+                })
                 
                 # Send configuration to controller
-                loop.run_until_complete(
-                    controller.devices.async_set_port_conf(port_conf)
-                )
-                
-                LOG.info("Reset port %s on switch %s to default configuration",
-                        port_id, switch_id)
-                return True
+                for attempt in range(CONF.unifi.port_setup_retry_count):
+                    try:
+                        loop.run_until_complete(
+                            controller.request(
+                                DeviceSetPortProfileRequest.create(
+                                    device=switch,
+                                    port_override=port_conf,
+                                )
+                            )
+                        )
+                        LOG.info("Reset port %s on switch %s to default configuration",
+                                port_id, switch_id)
+                        return True
+                    except Exception as e:
+                        if attempt < CONF.unifi.port_setup_retry_count - 1:
+                            LOG.warning("Failed to configure port, retrying: %s", e)
+                            time.sleep(CONF.unifi.port_setup_retry_interval)
+                        else:
+                            raise
                 
         except Exception as e:
             LOG.error("Failed to reset port %s on switch %s: %s",
