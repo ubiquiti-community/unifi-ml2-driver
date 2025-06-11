@@ -26,22 +26,22 @@ async def get_unifi_api(
 ) -> Controller:
     """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
+    unsafe: bool = True
     if CONF.unifi.verify_ssl:
+        unsafe = False
         ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,
         )
-        session = ClientSession(
-            cookie_jar=CookieJar(unsafe=False),
+        
+    session = ClientSession(
+        cookie_jar=CookieJar(unsafe=unsafe)
         )
-    else:
-        session = ClientSession(
-            cookie_jar=CookieJar(unsafe=True)
-            )
 
     api = Controller(
         Configuration(
             session,
             host=CONF.unifi.host,
+            apikey=CONF.unifi.apikey,
             username=CONF.unifi.username,
             password=CONF.unifi.password,
             port=CONF.unifi.port,

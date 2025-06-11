@@ -1,6 +1,18 @@
 name: PyPI Publish
 
-on: [push]
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+  workflow_dispatch:
+
+  # schedule:
+  #   - cron: "0 0 * * *" # every day at midnight UTC
+
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   build-sdist:

@@ -117,14 +117,14 @@ speedups = ["Brotli ; platform_python_implementation == \"CPython\"", "aiodns (>
 
 [[package]]
 name = "aiohttp-unifi"
-version = "87"
+version = "88"
 description = "Python library for communicating with UniFi Network Controller API"
 optional = false
 python-versions = "<4.0,>=3.12.0"
 groups = ["main"]
 files = [
-    {file = "aiohttp_unifi-87-py3-none-any.whl", hash = "sha256:a124878066e3267be499bfe35fe31c796711096a2787f5aba4656c9d6bca5037"},
-    {file = "aiohttp_unifi-87.tar.gz", hash = "sha256:cae5d8348d39f79ca1ff8aa0fcd9d4005391ead16e73b7f8edd8aca11170d191"},
+    {file = "aiohttp_unifi-88-py3-none-any.whl", hash = "sha256:a06f2d7714bb7de88e9279b6e167512ab14e08e56a388d2b3ba79608e152bd6a"},
+    {file = "aiohttp_unifi-88.tar.gz", hash = "sha256:35668f89b921ab9e4bbf97b5cd8bf0ff6094b2d6fe31f35d931b8147bf9e804f"},
 ]
 
 [package.dependencies]
@@ -5266,4 +5266,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12.0,<4.0"
-content-hash = "b5d25da9638c6d3b5de68ba7deac6d9b4a320fd93d826b290b6422e4e9044b3a"
+content-hash = "0e84a8e85ec3bff4f5c471c9e7d61690c6ad395a60eb22696fd0a9e1ef4fb1fc"

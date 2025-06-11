@@ -26,6 +26,10 @@ unifi_opts = [
     cfg.IntOpt('port',
                 default=8443,
                 help='Port of the UniFi Network controller'),
+    cfg.StrOpt('apikey',
+               secret=True,
+               help='API key for UniFi controller authentication. '
+                    'If set, username and password are ignored.'),
     cfg.StrOpt('username',
                help='Username for UniFi controller authentication'),
     cfg.StrOpt('password',
